@@ -450,7 +450,13 @@ const PostDetail = () => {
 
             {/* Q&A / Polling display */}
             {['qna', 'polling'].includes(post.category) && (
-              <PollDisplay post={post} />
+              (() => {
+                try {
+                  return <PollDisplay post={post} />;
+                } catch (e) {
+                  return <div className="text-xs text-gray-500 mt-2">Poll unavailable.</div>;
+                }
+              })()
             )}
 
             {/* Image attachments */}

@@ -248,7 +248,7 @@ router.get('/', optionalAuth, async (req, res) => {
       if (post.postType === 'polling' || post.postType === 'qna') {
         const votedIndices = [];
         (post.pollOptions || []).forEach((opt, idx) => {
-          const hasVotedThisOpt = req.userId && opt.votes.some(v => v.toString() === req.userId.toString());
+          const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
           if (hasVotedThisOpt) {
             votedIndices.push(idx);
             hasVoted = true;
@@ -329,7 +329,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (post.postType === 'polling' || post.postType === 'qna') {
       const votedIndices = [];
       (post.pollOptions || []).forEach((opt, idx) => {
-        const hasVotedThisOpt = req.userId && opt.votes.some(v => v.toString() === req.userId.toString());
+        const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
         if (hasVotedThisOpt) {
           votedIndices.push(idx);
           hasVoted = true;
@@ -810,7 +810,7 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
 
     // Check if the user has already voted on this post
     const alreadyVoted = post.pollOptions.some(opt =>
-      opt.votes.some(v => v.toString() === req.userId.toString())
+      (opt.votes || []).some(v => v.toString() === req.userId.toString())
     );
 
     if (alreadyVoted) {

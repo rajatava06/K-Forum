@@ -15,11 +15,21 @@ const PollDisplay = ({ post: initialPost }) => {
 
   const isQna = post.postType === 'qna';
   const hasVoted = post.userPollVote !== undefined && post.userPollVote !== null;
-  const isAuthor = user && post.author && (post.author._id || post.author) === user._id;
+  const isAuthor = user && post.author && 
+    (post.author._id?.toString() || post.author?.toString()) === user._id?.toString();
   const showResults = hasVoted || isAuthor;
 
   // Calculate total votes
   const totalVotes = (post.pollOptions || []).reduce((sum, opt) => sum + (opt.voteCount || 0), 0);
+
+  // Don't render at all if there are no options to show (prevents crashes)
+  if (!post.pollOptions || post.pollOptions.length === 0) {
+    return (
+      <div className="bg-white/5 border border-white/5 rounded-2xl p-5 my-4 text-center text-gray-500 text-sm">
+        No poll options available.
+      </div>
+    );
+  }
 
   const handleOptionSelect = (index) => {
     setError(null);
