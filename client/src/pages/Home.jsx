@@ -50,7 +50,9 @@ const Home = () => {
     { value: 'lost-found', label: '🔍 Lost & Found' },
     { value: 'clubs', label: '🏛️ Clubs' },
     { value: 'general', label: '💬 General' },
-    { value: 'Bookies', label: '🤖 Bookies' }
+    { value: 'Bookies', label: '🤖 Bookies' },
+    { value: 'qna', label: '❓ Q&A' },
+    { value: 'polling', label: '📊 Polling' }
   ];
 
   useEffect(() => {

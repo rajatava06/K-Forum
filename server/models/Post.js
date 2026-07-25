@@ -9,7 +9,9 @@ const postSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+    required: function() {
+      return !['qna', 'polling'].includes(this.category);
+    },
     maxlength: 5000
   },
   author: {
@@ -24,7 +26,7 @@ const postSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['academics', 'events', 'rants', 'internships', 'lost-found', 'clubs', 'general', 'Bookies']
+    enum: ['academics', 'events', 'rants', 'internships', 'lost-found', 'clubs', 'general', 'Bookies', 'qna', 'polling']
   },
   tags: [{
     type: String,
@@ -163,6 +165,30 @@ const postSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'flagged', 'removed'],
     default: 'approved'
+  },
+  postType: {
+    type: String,
+    enum: ['normal', 'qna', 'polling'],
+    default: 'normal'
+  },
+  pollOptions: [{
+    text: {
+      type: String,
+      required: true
+    },
+    votes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }]
+  }],
+  correctAnswers: [{
+    type: Number
+  }],
+  pollSettings: {
+    allowMultiple: {
+      type: Boolean,
+      default: false
+    }
   }
 }, {
   timestamps: true

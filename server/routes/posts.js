@@ -242,6 +242,26 @@ router.get('/', optionalAuth, async (req, res) => {
         userReaction = userReact?.type || null;
       }
 
+      // Check if user has voted on the poll
+      let userPollVote = null;
+      let hasVoted = false;
+      if (post.postType === 'polling' || post.postType === 'qna') {
+        const votedIndices = [];
+        (post.pollOptions || []).forEach((opt, idx) => {
+          const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
+          if (hasVotedThisOpt) {
+            votedIndices.push(idx);
+            hasVoted = true;
+          }
+        });
+        if (votedIndices.length > 0) {
+          userPollVote = post.postType === 'polling' ? votedIndices[0] : votedIndices;
+        }
+      }
+
+      const isAuthor = req.userId && post.author && (post.author._id || post.author).toString() === req.userId.toString();
+      const showCorrectAnswers = hasVoted || isAuthor;
+
       return {
         ...post,
         author: post.isAnonymous ? null : post.author,
@@ -249,7 +269,16 @@ router.get('/', optionalAuth, async (req, res) => {
         downvoteCount: post.downvotes?.length || 0,
         reactionCounts,
         totalReactions: (post.reactions || []).length,
-        userReaction
+        userReaction,
+        
+        // Q&A / Polling additions
+        pollOptions: (post.pollOptions || []).map(opt => ({
+          _id: opt._id,
+          text: opt.text,
+          voteCount: opt.votes?.length || 0
+        })),
+        correctAnswers: (post.postType === 'qna' && !showCorrectAnswers) ? [] : (post.correctAnswers || []),
+        userPollVote
       };
     });
 
@@ -294,6 +323,26 @@ router.get('/:id', optionalAuth, async (req, res) => {
       userReaction = userReact?.type || null;
     }
 
+    // Check if user has voted on the poll
+    let userPollVote = null;
+    let hasVoted = false;
+    if (post.postType === 'polling' || post.postType === 'qna') {
+      const votedIndices = [];
+      (post.pollOptions || []).forEach((opt, idx) => {
+        const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
+        if (hasVotedThisOpt) {
+          votedIndices.push(idx);
+          hasVoted = true;
+        }
+      });
+      if (votedIndices.length > 0) {
+        userPollVote = post.postType === 'polling' ? votedIndices[0] : votedIndices;
+      }
+    }
+
+    const isAuthor = req.userId && post.author && (post.author._id || post.author).toString() === req.userId.toString();
+    const showCorrectAnswers = hasVoted || isAuthor;
+
     const processedPost = {
       ...post.toObject(),
       author: post.isAnonymous ? null : post.author,
@@ -301,7 +350,16 @@ router.get('/:id', optionalAuth, async (req, res) => {
       downvoteCount: post.downvotes?.length || 0,
       reactionCounts,
       totalReactions: (post.reactions || []).length,
-      userReaction
+      userReaction,
+      
+      // Q&A / Polling additions
+      pollOptions: (post.pollOptions || []).map(opt => ({
+        _id: opt._id,
+        text: opt.text,
+        voteCount: opt.votes?.length || 0
+      })),
+      correctAnswers: (post.postType === 'qna' && !showCorrectAnswers) ? [] : (post.correctAnswers || []),
+      userPollVote
     };
 
     res.json(processedPost);
@@ -316,7 +374,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // ============================================
 router.post('/', auth, upload.array('images', 5), async (req, res) => {
   try {
-    const { title, content, category, tags, isAnonymous, eventDate } = req.body;
+    const { title, content, category, tags, isAnonymous, eventDate, pollOptions, correctAnswers } = req.body;
 
     console.log('📝 Create Post Request Received');
     console.log('   Content-Type:', req.headers['content-type']);
@@ -327,7 +385,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     );
 
     // --- AI MODERATION ---
-    const textToAnalyze = `${title}\n${content}`;
+    const textToAnalyze = `${title}\n${content || ''}`;
     console.log('Analyzing content for moderation...');
 
     const moderationResult = await moderateText(textToAnalyze);
@@ -383,9 +441,37 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
 
     console.log('📎 Attachments to save:', JSON.stringify(cleanAttachments, null, 2));
 
+    let parsedPollOptions = [];
+    if (category === 'qna' || category === 'polling') {
+      try {
+        if (pollOptions) {
+          const rawOptions = typeof pollOptions === 'string' 
+            ? JSON.parse(pollOptions) 
+            : pollOptions;
+          parsedPollOptions = rawOptions.map(opt => ({ text: opt.text, votes: [] }));
+        }
+      } catch (err) {
+        console.error('Error parsing poll options:', err);
+      }
+    }
+
+    let parsedCorrectAnswers = [];
+    if (category === 'qna') {
+      try {
+        if (correctAnswers) {
+          parsedCorrectAnswers = typeof correctAnswers === 'string'
+            ? JSON.parse(correctAnswers)
+            : correctAnswers;
+          parsedCorrectAnswers = parsedCorrectAnswers.map(Number);
+        }
+      } catch (err) {
+        console.error('Error parsing correct answers:', err);
+      }
+    }
+
     const post = new Post({
       title: title.trim(),
-      content: content.trim(),
+      content: (content || '').trim() || (category === 'qna' ? 'Q&A' : category === 'polling' ? 'Poll' : ''),
       author: req.userId,
       category,
       tags: allTags,
@@ -404,7 +490,15 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
       },
 
       // Keep old field for backward compatibility
-      moderationStatus: status === 'PUBLISHED' ? 'approved' : 'flagged'
+      moderationStatus: status === 'PUBLISHED' ? 'approved' : 'flagged',
+
+      // Q&A / Polling fields
+      postType: ['qna', 'polling'].includes(category) ? category : 'normal',
+      pollOptions: parsedPollOptions,
+      correctAnswers: parsedCorrectAnswers,
+      pollSettings: {
+        allowMultiple: category === 'qna'
+      }
     });
 
     await post.save();
@@ -692,6 +786,68 @@ router.post('/:id/report', auth, async (req, res) => {
     res.json({ message: 'Post reported successfully' });
   } catch (error) {
     console.error('Report post error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Register poll or Q&A votes
+router.post('/:id/poll-vote', auth, async (req, res) => {
+  try {
+    const { optionIndices } = req.body; // Array of option indices (numbers)
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (post.postType !== 'polling' && post.postType !== 'qna') {
+      return res.status(400).json({ message: 'This post is not a poll or Q&A' });
+    }
+
+    if (!Array.isArray(optionIndices) || optionIndices.length === 0) {
+      return res.status(400).json({ message: 'Please select at least one option' });
+    }
+
+    // Check if the user has already voted on this post
+    const alreadyVoted = post.pollOptions.some(opt =>
+      (opt.votes || []).some(v => v.toString() === req.userId.toString())
+    );
+
+    if (alreadyVoted) {
+      return res.status(400).json({ message: 'You have already voted on this poll' });
+    }
+
+    // For single-choice polling, only allow 1 option
+    if (post.postType === 'polling' && optionIndices.length > 1) {
+      return res.status(400).json({ message: 'Only one choice is allowed for this poll' });
+    }
+
+    // Validate indices range
+    for (const index of optionIndices) {
+      const idx = parseInt(index);
+      if (isNaN(idx) || idx < 0 || idx >= post.pollOptions.length) {
+        return res.status(400).json({ message: 'Invalid option index chosen' });
+      }
+      post.pollOptions[idx].votes.push(req.userId);
+    }
+
+    await post.save();
+
+    // Prepare response options with updated counts
+    const pollOptions = post.pollOptions.map(opt => ({
+      _id: opt._id,
+      text: opt.text,
+      voteCount: opt.votes.length
+    }));
+
+    res.json({
+      message: 'Vote submitted successfully!',
+      pollOptions,
+      correctAnswers: post.correctAnswers || [],
+      userPollVote: post.postType === 'polling' ? optionIndices[0] : optionIndices
+    });
+  } catch (error) {
+    console.error('Poll vote error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

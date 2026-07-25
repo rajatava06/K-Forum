@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { MessageCircle, Eye, Clock, User, MoreVertical, Flag, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import ImageViewer from '../ImageViewer';
 import PostReactions from './PostReactions';
+import PollDisplay from './PollDisplay';
 import confetti from 'canvas-confetti';
 
 const PostCard = ({ post, onDelete }) => {
@@ -35,7 +36,9 @@ const PostCard = ({ post, onDelete }) => {
       internships: 'bg-[#17d059]',
       'lost-found': 'bg-yellow-500',
       clubs: 'bg-indigo-500',
-      general: 'bg-gray-500'
+      general: 'bg-gray-500',
+      qna: 'bg-amber-500',
+      polling: 'bg-emerald-500'
     };
     return colors[category] || 'bg-gray-500';
   };
@@ -140,21 +143,26 @@ const PostCard = ({ post, onDelete }) => {
                 <User className="w-5 h-5 text-white" />
               )}
             </div>
-            <div>
-              <p className="text-white font-medium">
+            <div className="flex flex-col">
+              <span className="text-white font-semibold">
                 {post.author && !post.isAnonymous ? (
                   <Link
                     to={`/user/${post.author._id}`}
                     className="hover:text-[#17d059] transition-colors"
                   >
-                    {post.author.name} ({post.author.studentId})
+                    {post.author.name}
                   </Link>
                 ) : 'Anonymous'}
-              </p>
-              <p className="text-gray-400 text-sm flex items-center">
-                <Clock className="w-4 h-4 mr-1" />
+              </span>
+              {post.author && !post.isAnonymous && (
+                <span className="text-xs text-gray-400 font-mono mt-0.5">
+                  @{post.author.studentId}
+                </span>
+              )}
+              <span className="text-gray-400 text-xs mt-1 flex items-center">
+                <Clock className="w-3.5 h-3.5 mr-1" />
                 {formatTime(post.createdAt)}
-              </p>
+              </span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -211,10 +219,21 @@ const PostCard = ({ post, onDelete }) => {
           <h3 className="text-xl font-semibold text-white mb-3 hover:text-[#17d059] transition-colors">
             {post.title}
           </h3>
-          <p className="text-gray-300 mb-4 line-clamp-3">
-            {post.content.substring(0, 200)}...
-          </p>
+          {!['qna', 'polling'].includes(post.category) && (
+            <p className="text-gray-300 mb-4 line-clamp-3">
+              {post.content.substring(0, 200)}...
+            </p>
+          )}
         </Link>
+        {['qna', 'polling'].includes(post.category) && (
+          (() => {
+            try {
+              return <PollDisplay post={post} />;
+            } catch (e) {
+              return <div className="text-xs text-gray-500 mt-2">Poll unavailable.</div>;
+            }
+          })()
+        )}
         {console.log('Post attachments:', post._id, post.attachments)}
 
         {/* Image attachments */}
