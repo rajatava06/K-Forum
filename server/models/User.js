@@ -32,7 +32,8 @@ const userSchema = new mongoose.Schema({
   studentId: {
     type: String,
     unique: true,
-    sparse: true  // Google users may not have a studentId initially
+    sparse: true,
+    trim: true
   },
   year: {
     type: Number,
@@ -122,6 +123,15 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+userSchema.index(
+  { studentId: 1 },
+  { 
+    unique: true, 
+    sparse: true, 
+    partialFilterExpression: { studentId: { $type: "string" } } 
+  }
+);
 
 userSchema.pre('save', async function (next) {
   // Skip hashing for Google-authenticated users or unchanged passwords
