@@ -32,7 +32,8 @@ router.get('/trending/hashtags', async (req, res) => {
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const trendingTags = await Post.aggregate([
+    // Try recent hashtags first
+    let trendingTags = await Post.aggregate([
       {
         $match: {
           createdAt: { $gte: sevenDaysAgo },
@@ -59,6 +60,36 @@ router.get('/trending/hashtags', async (req, res) => {
         }
       }
     ]);
+
+    // If recent hashtags are fewer than 3, fall back to all-time hashtags
+    if (trendingTags.length < 3) {
+      trendingTags = await Post.aggregate([
+        {
+          $match: {
+            $or: [
+              { status: 'PUBLISHED' },
+              { status: { $exists: false }, moderationStatus: 'approved' }
+            ]
+          }
+        },
+        { $unwind: '$tags' },
+        {
+          $group: {
+            _id: '$tags',
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { count: -1 } },
+        { $limit: parseInt(limit) },
+        {
+          $project: {
+            tag: '$_id',
+            count: 1,
+            _id: 0
+          }
+        }
+      ]);
+    }
 
     res.json(trendingTags);
   } catch (error) {

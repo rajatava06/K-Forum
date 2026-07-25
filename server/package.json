@@ -21,6 +21,8 @@
     "k-forum-platform-root": "file:..",
     "mongoose": "^8.21.0",
     "multer": "^1.4.5-lts.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "resend": "^3.5.0",
     "socket.io": "^4.7.4"
   },

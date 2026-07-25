@@ -374,7 +374,7 @@ const Home = () => {
           <EventCalendar />
 
           {/* Trending Hashtags — scrollable */}
-          <div className="glass-panel rounded-3xl p-6 flex-1 overflow-y-auto feed-scroll min-h-0">
+          <div className="glass-panel rounded-3xl p-6 flex-1 overflow-y-auto no-scrollbar min-h-0">
             <TrendingHashtags onTagClick={(tag) => {
               setSearchTerm(`#${tag}`);
               setPage(1);

@@ -51,10 +51,10 @@ const SplashScreen = ({ onFinish }) => {
                 {/* Logo */}
                 <div className="relative mb-6">
                     <div
-                        className="w-24 h-24 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/30"
+                        className="w-24 h-24 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/30 border-2 border-white/20 overflow-hidden"
                         style={{ animation: 'splashFloat 3s ease-in-out infinite' }}
                     >
-                        <span className="text-white font-black text-5xl tracking-tight">K</span>
+                        <img src="/logo.png" alt="K-Forum Logo" className="w-full h-full object-cover" />
                     </div>
                     {/* Glow ring */}
                     <div

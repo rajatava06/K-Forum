@@ -86,7 +86,16 @@ const UserProfile = () => {
                 </div>
                 <div className="flex items-center text-gray-300">
                   <Calendar className="w-5 h-5 mr-2 text-[#17d059]" />
-                  <span>Year {user.year}</span>
+                  <span>
+                    {(() => {
+                      const y = parseInt(user.year);
+                      if (y === 1) return '1st';
+                      if (y === 2) return '2nd';
+                      if (y === 3) return '3rd';
+                      if (y === 4) return '4th';
+                      return `${user.year}th`;
+                    })()} Year
+                  </span>
                 </div>
               </div>
             </div>

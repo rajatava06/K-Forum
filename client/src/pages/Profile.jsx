@@ -20,7 +20,8 @@ const Profile = () => {
   const [editData, setEditData] = useState({
     name: '',
     year: '',
-    branch: ''
+    branch: '',
+    studentId: ''
   });
   const [avatarPreview, setAvatarPreview] = useState(null);
   const fileInputRef = useRef(null);
@@ -39,7 +40,8 @@ const Profile = () => {
       setEditData({
         name: response.data.name,
         year: response.data.year,
-        branch: response.data.branch
+        branch: response.data.branch,
+        studentId: response.data.studentId || ''
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -101,8 +103,10 @@ const Profile = () => {
       const response = await axios.put(`/api/users/profile`, editData);
       setProfile({ ...profile, ...response.data });
       setEditMode(false);
+      toast.success('Profile updated successfully! 🎉');
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     }
   };
 
@@ -170,28 +174,47 @@ const Profile = () => {
                 </div>
                 {editMode ? (
                   <form onSubmit={handleEditSubmit} className="space-y-4">
-                    <input
-                      type="text"
-                      value={editData.name}
-                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                      className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
-                    />
-                    <select
-                      value={editData.year}
-                      onChange={(e) => setEditData({ ...editData, year: e.target.value })}
-                      className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
-                    >
-                      <option value="1">1st Year</option>
-                      <option value="2">2nd Year</option>
-                      <option value="3">3rd Year</option>
-                      <option value="4">4th Year</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={editData.branch}
-                      onChange={(e) => setEditData({ ...editData, branch: e.target.value })}
-                      className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
-                    />
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs text-gray-400 font-semibold px-1">Name</label>
+                      <input
+                        type="text"
+                        value={editData.name}
+                        onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs text-gray-400 font-semibold px-1">@ Username</label>
+                      <input
+                        type="text"
+                        value={editData.studentId}
+                        onChange={(e) => setEditData({ ...editData, studentId: e.target.value })}
+                        placeholder="username"
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs text-gray-400 font-semibold px-1">Year</label>
+                      <select
+                        value={editData.year}
+                        onChange={(e) => setEditData({ ...editData, year: e.target.value })}
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
+                      >
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1 text-left">
+                      <label className="text-xs text-gray-400 font-semibold px-1">Branch</label>
+                      <input
+                        type="text"
+                        value={editData.branch}
+                        onChange={(e) => setEditData({ ...editData, branch: e.target.value })}
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-[#17d059] focus:outline-none"
+                      />
+                    </div>
                     <div className="flex space-x-2">
                       <button
                         type="submit"
@@ -232,7 +255,16 @@ const Profile = () => {
                 </div>
                 <div className="flex items-center space-x-3 text-gray-300">
                   <GraduationCap className="w-5 h-5 text-[#17d059]" />
-                  <span>{profile.year}th Year • {profile.branch}</span>
+                  <span>
+                    {(() => {
+                      const y = parseInt(profile.year);
+                      if (y === 1) return '1st';
+                      if (y === 2) return '2nd';
+                      if (y === 3) return '3rd';
+                      if (y === 4) return '4th';
+                      return `${profile.year}th`;
+                    })()} Year • {profile.branch}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-3 text-gray-300">
                   <Calendar className="w-5 h-5 text-[#17d059]" />

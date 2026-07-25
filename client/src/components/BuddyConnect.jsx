@@ -171,7 +171,16 @@ const BuddyConnect = () => {
               />
               <div>
                 <h2 className="text-xl font-bold text-white">{selectedUser.name}</h2>
-                <p className="text-sm text-gray-400">{getBranchAbbreviation(selectedUser.branch)} • Year {selectedUser.year}</p>
+                <p className="text-sm text-gray-400">
+                  {getBranchAbbreviation(selectedUser.branch)} • {(() => {
+                    const y = parseInt(selectedUser.year);
+                    if (y === 1) return '1st';
+                    if (y === 2) return '2nd';
+                    if (y === 3) return '3rd';
+                    if (y === 4) return '4th';
+                    return `${selectedUser.year}th`;
+                  })()} Year
+                </p>
               </div>
             </div>
 
