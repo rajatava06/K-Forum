@@ -237,7 +237,7 @@ router.get('/', optionalAuth, async (req, res) => {
       let userReaction = null;
       if (req.userId) {
         const userReact = (post.reactions || []).find(
-          r => r.user.toString() === req.userId.toString()
+          r => r.user && r.user.toString() === req.userId.toString()
         );
         userReaction = userReact?.type || null;
       }
@@ -248,7 +248,7 @@ router.get('/', optionalAuth, async (req, res) => {
       if (post.postType === 'polling' || post.postType === 'qna') {
         const votedIndices = [];
         (post.pollOptions || []).forEach((opt, idx) => {
-          const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
+          const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v && v.toString() === req.userId.toString());
           if (hasVotedThisOpt) {
             votedIndices.push(idx);
             hasVoted = true;
@@ -259,7 +259,7 @@ router.get('/', optionalAuth, async (req, res) => {
         }
       }
 
-      const isAuthor = req.userId && post.author && (post.author._id || post.author).toString() === req.userId.toString();
+      const isAuthor = req.userId && post.author && (post.author._id ? post.author._id.toString() : post.author.toString()) === req.userId.toString();
       const showCorrectAnswers = hasVoted || isAuthor;
 
       return {
@@ -329,7 +329,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
     if (post.postType === 'polling' || post.postType === 'qna') {
       const votedIndices = [];
       (post.pollOptions || []).forEach((opt, idx) => {
-        const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v.toString() === req.userId.toString());
+        const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v && v.toString() === req.userId.toString());
         if (hasVotedThisOpt) {
           votedIndices.push(idx);
           hasVoted = true;
@@ -340,7 +340,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       }
     }
 
-    const isAuthor = req.userId && post.author && (post.author._id || post.author).toString() === req.userId.toString();
+    const isAuthor = req.userId && post.author && (post.author._id ? post.author._id.toString() : post.author.toString()) === req.userId.toString();
     const showCorrectAnswers = hasVoted || isAuthor;
 
     const processedPost = {
