@@ -184,7 +184,7 @@ router.get('/', optionalAuth, async (req, res) => {
         let userReaction = null;
         if (req.userId) {
           const userReact = (post.reactions || []).find(
-            r => r.user.toString() === req.userId.toString()
+            r => r.user && r.user.toString() === req.userId.toString()
           );
           userReaction = userReact?.type || null;
         }

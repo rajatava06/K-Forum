@@ -405,7 +405,7 @@ const PostDetail = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getCategoryColor(post.category)}`}>
-                  {post.category.replace('-', ' ').toUpperCase()}
+                  {(post.category || 'general').replace('-', ' ').toUpperCase()}
                 </span>
                 <div className="relative z-20">
                   <button

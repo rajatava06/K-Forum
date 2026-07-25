@@ -208,7 +208,7 @@ const Admin = () => {
                   {stats.categoryStats.map((category) => (
                     <div key={category._id} className="text-center">
                       <p className="text-2xl font-bold text-[#17d059]">{category.count}</p>
-                      <p className="text-gray-400 capitalize">{category._id.replace('-', ' ')}</p>
+                      <p className="text-gray-400 capitalize">{(category._id || 'general').replace('-', ' ')}</p>
                     </div>
                   ))}
                 </div>

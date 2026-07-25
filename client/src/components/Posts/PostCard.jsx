@@ -167,7 +167,7 @@ const PostCard = ({ post, onDelete }) => {
           </div>
           <div className="flex items-center space-x-2">
             <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getCategoryColor(post.category)}`}>
-              {post.category.replace('-', ' ').toUpperCase()}
+              {(post.category || 'general').replace('-', ' ').toUpperCase()}
             </span>
             {post.moderationStatus === 'flagged' && (
               <span className="px-3 py-1 rounded-full text-xs font-medium text-white bg-red-600 animate-pulse">
