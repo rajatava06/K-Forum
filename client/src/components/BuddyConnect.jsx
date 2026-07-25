@@ -102,7 +102,7 @@ const BuddyConnect = () => {
     </div>
   );
 
-  if (suggestions.length === 0) return null;
+  if (!loading && suggestions.length === 0) return null;
 
   return (
     <>

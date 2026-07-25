@@ -304,9 +304,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Increment view count
-    post.viewCount += 1;
-    await post.save();
+    // Increment view count without triggering full validation on old documents
+    await Post.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
 
     // Calculate reaction counts
     const reactionCounts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
