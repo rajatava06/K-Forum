@@ -245,8 +245,7 @@ router.put('/profile', auth, upload.single('avatar'), async (req, res) => {
     if (req.file) {
       try {
         // Convert buffer to base64
-        const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        const avatarUrl = await uploadImage(base64Image);
+        const avatarUrl = await uploadImage(req.file.buffer, req.file.mimetype);
         updateData.avatar = avatarUrl;
       } catch (error) {
         console.error('Avatar upload error:', error);

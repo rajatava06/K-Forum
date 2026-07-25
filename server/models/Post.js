@@ -24,12 +24,38 @@ const postSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['academics', 'events', 'rants', 'internships', 'lost-found', 'clubs', 'general', 'Bookies']
+    enum: ['academics', 'events', 'rants', 'internships', 'lost-found', 'clubs', 'general', 'Bookies', 'qna', 'Qna']
   },
   tags: [{
     type: String,
     trim: true
   }],
+
+  isQuiz: {
+  type: Boolean,
+  default: false,
+},
+
+// quiz: {
+//   question: String,
+
+//   options: [String],
+
+//   correctAnswer: Number,
+// },
+quiz: {
+  question: String,
+  options: [String],
+  correctAnswer: Number,
+
+  answeredUsers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+},
+
   upvotes: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -164,6 +190,18 @@ const postSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'flagged', 'removed'],
     default: 'approved'
   }
+//   ,isQuiz: {
+//   type: Boolean,
+//   default: false,
+// },
+
+// quiz: {
+//   question: String,
+
+//   options: [String],
+
+//   correctAnswer: Number,
+// },
 }, {
   timestamps: true
 });

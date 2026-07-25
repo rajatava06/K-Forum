@@ -18,6 +18,10 @@ const PostCard = ({ post, onDelete }) => {
   const [upvoteCount, setUpvoteCount] = useState(post.upvoteCount || 0);
   const [downvoteCount, setDownvoteCount] = useState(post.downvoteCount || 0);
   const [isVoting, setIsVoting] = useState(false);
+  const [answered, setAnswered] = useState(false);
+  const [result, setResult] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const formatTime = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
@@ -35,6 +39,7 @@ const PostCard = ({ post, onDelete }) => {
       internships: 'bg-[#17d059]',
       'lost-found': 'bg-yellow-500',
       clubs: 'bg-indigo-500',
+      Qna: 'bg-emerald-500',
       general: 'bg-gray-500'
     };
     return colors[category] || 'bg-gray-500';
@@ -110,6 +115,42 @@ const PostCard = ({ post, onDelete }) => {
       });
     }
   };
+
+  
+
+const handleQuizAnswer = async (optionIndex) => {
+  if (!user) {
+    toast.error('Please login to answer this quiz');
+    navigate('/login');
+    return;
+  }
+
+  if (answered || isSubmittingAnswer) return;
+
+  setSelectedOption(optionIndex);
+  setIsSubmittingAnswer(true);
+
+  try {
+    const res = await axios.post(`/api/quiz/${post._id}/answer`, {
+      selectedOption: optionIndex,
+    });
+
+    setAnswered(true);
+    setResult(res.data.correct);
+
+    if (res.data.correct) {
+      toast.success('✅ Correct Answer!');
+    } else {
+      const correctOption = post.quiz?.options?.[res.data.correctAnswer] || 'the correct option';
+      toast.error(`❌ Wrong Answer! The correct answer is: ${correctOption}`);
+    }
+  } catch (error) {
+    setSelectedOption(null);
+    toast.error(error.response?.data?.message || 'Unable to submit answer.');
+  } finally {
+    setIsSubmittingAnswer(false);
+  }
+};
 
   return (
     <div
@@ -207,14 +248,76 @@ const PostCard = ({ post, onDelete }) => {
       </div>
 
       <div className="mt-4 space-y-4">
-        <Link to={`/post/${post._id}`} className="block">
+        {/* <Link to={`/post/${post._id}`} className="block">
           <h3 className="text-xl font-semibold text-white mb-3 hover:text-[#17d059] transition-colors">
             {post.title}
           </h3>
           <p className="text-gray-300 mb-4 line-clamp-3">
             {post.content.substring(0, 200)}...
           </p>
-        </Link>
+        </Link> */}
+        {post.isQuiz && post.quiz ? (
+  <div className="space-y-3 mb-4">
+    <div className="flex items-center justify-between">
+      <h3 className="text-xl font-semibold text-white">
+        {post.title}
+      </h3>
+      {answered && (
+        <span className={`text-sm font-medium ${result ? 'text-emerald-400' : 'text-red-400'}`}>
+          {result ? 'Correct' : 'Incorrect'}
+        </span>
+      )}
+    </div>
+
+    <div className="space-y-2">
+      {post.quiz.options.map((option, index) => {
+        const isSelected = selectedOption === index;
+        const showCorrect = answered && index === post.quiz.correctAnswer;
+
+        return (
+          <button
+            key={index}
+            onClick={() => handleQuizAnswer(index)}
+            disabled={answered || isSubmittingAnswer}
+            className={`w-full text-left p-3 rounded-lg border transition-all ${
+              answered
+                ? showCorrect
+                  ? 'bg-emerald-600/90 border-emerald-500 text-white'
+                  : isSelected
+                    ? 'bg-red-600/90 border-red-500 text-white'
+                    : 'bg-gray-800/70 border-gray-700 text-gray-300'
+                : isSelected
+                  ? 'bg-emerald-600/20 border-emerald-500 text-white'
+                  : 'bg-gray-800/70 border-gray-700 text-gray-200 hover:border-emerald-500 hover:bg-emerald-600/10'
+            }`}
+          >
+            <span className="flex items-center justify-between">
+              <span>{option}</span>
+              {answered && showCorrect && <span className="text-sm font-semibold">✓</span>}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+
+    {answered && (
+      <p className={`text-sm font-semibold text-center ${result ? 'text-emerald-400' : 'text-red-400'}`}>
+        {result ? '✅ Correct Answer!' : '❌ Wrong Answer!'}
+      </p>
+    )}
+  </div>
+) : (
+  <Link to={`/post/${post._id}`} className="block">
+    <h3 className="text-xl font-semibold text-white mb-3 hover:text-[#17d059] transition-colors">
+      {post.title}
+    </h3>
+
+    <p className="text-gray-300 mb-4 line-clamp-3">
+      {post.content.substring(0, 200)}...
+    </p>
+  </Link>
+)}
+
         {console.log('Post attachments:', post._id, post.attachments)}
 
         {/* Image attachments */}

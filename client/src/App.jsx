@@ -15,7 +15,7 @@ import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
 import BuddyConnectPage from './pages/BuddyConnectPage';
 import Wordle from './pages/Wordle';
-
+import Qna from './pages/Qna';
 import CalendarPage from './pages/CalendarPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
@@ -63,6 +63,14 @@ const MainContainer = () => {
               <Wordle />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/qna"
+          element={
+            <ProtectedRoute>
+              <Qna />
+            </ProtectedRoute>
+        }
         />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/buddy-connect" element={<BuddyConnectPage />} />

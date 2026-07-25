@@ -17,6 +17,9 @@ const CreatePost = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [qnaQuestion, setQnaQuestion] = useState('');
+  const [qnaOptions, setQnaOptions] = useState(['', '']);
+  const [qnaCorrectAnswer, setQnaCorrectAnswer] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -28,7 +31,8 @@ const CreatePost = () => {
     { id: 'lost-found', name: 'Lost & Found', icon: '🔍' },
     { id: 'clubs', name: 'Clubs', icon: '🏛️' },
     { id: 'general', name: 'General', icon: '💬' },
-    { id: 'Bookies', name: 'Bookies', icon: '🤖' }
+    { id: 'Bookies', name: 'Bookies', icon: '🤖' },
+    { id: 'qna', name: 'QnA', icon: '❓'},
   ];
 
   const handleChange = (e) => {
@@ -83,8 +87,69 @@ const CreatePost = () => {
     setImageFiles(newImageFiles);
   };
 
+  const addQnaOption = () => {
+    if (qnaOptions.length < 8) {
+      setQnaOptions([...qnaOptions, '']);
+    }
+  };
+
+  const handleQnaOptionChange = (index, value) => {
+    const updatedOptions = [...qnaOptions];
+    updatedOptions[index] = value;
+    setQnaOptions(updatedOptions);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.category === 'qna') {
+      const filledQnaOptions = qnaOptions.filter((option) => option.trim() !== '');
+
+      if (!qnaQuestion.trim()) {
+        toast.error('Please enter a question.');
+        return;
+      }
+
+      if (filledQnaOptions.length < 2) {
+        toast.error('Please enter at least two answer options.');
+        return;
+      }
+
+      if (qnaCorrectAnswer === null) {
+        toast.error('Please select the correct answer.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const formDataToSend = new FormData();
+        formDataToSend.append('question', qnaQuestion);
+        filledQnaOptions.forEach((option) => {
+          formDataToSend.append('options', option);
+        });
+        formDataToSend.append('correctAnswer', qnaCorrectAnswer);
+        formDataToSend.append('tags', formData.tags);
+        formDataToSend.append('isAnonymous', formData.isAnonymous);
+
+        imageFiles.forEach((file) => {
+          formDataToSend.append('images', file);
+        });
+
+        const response = await axios.post('/api/quiz', formDataToSend);
+
+        toast.success('Question posted successfully!');
+        navigate(`/post/${response.data.post._id}`);
+      } catch (error) {
+        console.error('Error creating quiz post:', error);
+        toast.error(error.response?.data?.message || 'Failed to create question');
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -138,6 +203,8 @@ const CreatePost = () => {
       setLoading(false);
     }
   };
+
+  const isSubmitDisabled = loading || !formData.category || (formData.category !== 'qna' && (!formData.title || !formData.content)) || (formData.category === 'qna' && (!qnaQuestion.trim() || qnaOptions.filter((option) => option.trim() !== '').length < 2 || qnaCorrectAnswer === null));
 
   return (
 
@@ -193,7 +260,11 @@ const CreatePost = () => {
                       name="category"
                       value={category.id}
                       checked={formData.category === category.id}
-                      onChange={handleChange}
+                      // onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        // Previously this opened the separate QnA page; it now stays inline on this form.
+                      }}
                       className="sr-only"
                     />
                     <span className="text-3xl mb-2 group-hover:scale-110 transition-transform duration-300">{category.icon}</span>
@@ -208,6 +279,66 @@ const CreatePost = () => {
               </div>
             </div>
 
+
+            {/* QnA Builder */}
+            {formData.category === 'qna' && (
+              <div className="space-y-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5 sm:p-6 animate-fade-in">
+                <div>
+                  <h3 className="text-lg font-bold text-emerald-300">QnA Details</h3>
+                  <p className="text-sm text-gray-400">Add a question with up to 8 answer options and choose the correct one.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
+                    Question
+                  </label>
+                  <input
+                    type="text"
+                    value={qnaQuestion}
+                    onChange={(e) => setQnaQuestion(e.target.value)}
+                    maxLength="300"
+                    className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all placeholder-gray-600"
+                    placeholder="Ask your question..."
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
+                    Options
+                  </label>
+                  {qnaOptions.map((option, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <input
+                        type="radio"
+                        name="qnaCorrectAnswer"
+                        checked={qnaCorrectAnswer === index}
+                        onChange={() => setQnaCorrectAnswer(index)}
+                        className="h-5 w-5 accent-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleQnaOptionChange(index, e.target.value)}
+                        maxLength="200"
+                        className="w-full bg-white/5 text-white px-4 py-3 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all placeholder-gray-600"
+                        placeholder={`Option ${index + 1}`}
+                      />
+                    </div>
+                  ))}
+
+                  {qnaOptions.length < 8 && (
+                    <button
+                      type="button"
+                      onClick={addQnaOption}
+                      className="w-full rounded-2xl border border-emerald-500/40 bg-emerald-500/10 py-3 font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20"
+                    >
+                      + Add Option
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500">You can add up to 8 options. Select the correct answer with the radio button.</p>
+                </div>
+              </div>
+            )}
 
             {/* Event Date Picker - Only for Events */}
             {formData.category === 'events' && (
@@ -231,26 +362,28 @@ const CreatePost = () => {
             )}
 
             {/* Content */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
-                Content
-              </label>
-              <textarea
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                required
-                maxLength="5000"
-                rows="8"
-                className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all resize-none placeholder-gray-600 leading-relaxed"
-                placeholder="What's on your mind? Share your story, confession, or question..."
-              />
-              <div className="flex justify-end">
-                <span className="text-xs text-gray-500 font-mono">
-                  {formData.content.length}/5000
-                </span>
+            {formData.category !== 'qna' && (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
+                  Content
+                </label>
+                <textarea
+                  name="content"
+                  value={formData.content}
+                  onChange={handleChange}
+                  required
+                  maxLength="5000"
+                  rows="8"
+                  className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all resize-none placeholder-gray-600 leading-relaxed"
+                  placeholder="What's on your mind? Share your story, confession, or question..."
+                />
+                <div className="flex justify-end">
+                  <span className="text-xs text-gray-500 font-mono">
+                    {formData.content.length}/5000
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Tags */}
             <div className="space-y-2">
@@ -366,7 +499,7 @@ const CreatePost = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading || !formData.title || !formData.content || !formData.category}
+                disabled={isSubmitDisabled}
                 className="w-full sm:w-auto relative overflow-hidden bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 sm:px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">

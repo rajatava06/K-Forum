@@ -49,6 +49,7 @@ const Home = () => {
     { value: 'internships', label: '💼 Internships' },
     { value: 'lost-found', label: '🔍 Lost & Found' },
     { value: 'clubs', label: '🏛️ Clubs' },
+    { value: 'qna', label: '❓ QnA' },
     { value: 'general', label: '💬 General' },
     { value: 'Bookies', label: '🤖 Bookies' }
   ];
