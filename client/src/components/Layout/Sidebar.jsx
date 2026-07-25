@@ -6,6 +6,15 @@ import { useAuth } from '../../contexts/AuthContext';
 const Sidebar = ({ isOpen, setIsOpen }) => {
     const { user } = useAuth();
 
+    const getOrdinalYear = (year) => {
+        const y = parseInt(year);
+        if (y === 1) return '1st';
+        if (y === 2) return '2nd';
+        if (y === 3) return '3rd';
+        if (y === 4) return '4th';
+        return `${year}th`;
+    };
+
     const navItems = [
         { icon: Home, label: 'Home', path: '/' },
         // { icon: Search, label: 'Search', path: '/search' },
@@ -39,10 +48,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
             {/* Minimal Logo */}
             <div className={`flex items-center ${isOpen ? 'justify-start px-4' : 'justify-center px-4'} mb-12 transition-all duration-300`}>
-                <div className="w-12 h-12 shrink-0 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center border border-white/10">
-                    <span className="text-white font-extrabold text-2xl">K</span>
+                <div className="w-12 h-12 shrink-0 bg-white/5 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)] overflow-hidden">
+                    <img src="/logo.png" alt="K-Forum Logo" className="w-full h-full object-cover" />
                 </div>
-                <div className={`ml-4 overflow-hidden transition-all duration-300 ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
+                <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'ml-4 w-auto opacity-100' : 'ml-0 w-0 opacity-0'}`}>
                     <span className="text-xl font-bold whitespace-nowrap">
                         <span className="text-white">K</span>
                         <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">-Forum</span>
@@ -90,28 +99,41 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
             {/* User Profile Bubble */}
             {user && (
-                <div className={`mt-auto relative group px-4 w-full transition-all duration-300 ${isOpen ? 'flex items-center gap-3 px-2' : ''}`}>
-                    <div className="w-10 h-10 shrink-0 rounded-full border-2 border-emerald-500/30 p-[2px] cursor-pointer hover:border-emerald-400 transition-colors">
+                <div className={`mt-auto relative w-full transition-all duration-300 flex items-center ${isOpen ? 'gap-3 px-6' : 'justify-center px-0'}`}>
+                    <div className="relative group/avatar w-10 h-10 shrink-0 rounded-full border-2 border-emerald-500/30 p-[2px] cursor-pointer hover:border-emerald-400 transition-colors">
                         <img
                             src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}&background=10b981&color=fff`}
                             alt={user.name}
                             className="w-full h-full rounded-full object-cover"
                         />
+
+                        {/* Profile Tooltip (Tinted Glass Popover) */}
+                        <div className={`
+                            absolute p-3 rounded-xl w-48 shadow-2xl z-50
+                            bg-emerald-950/50 border border-emerald-500/35 backdrop-blur-xl 
+                            shadow-[0_0_20px_rgba(16,185,129,0.2)]
+                            opacity-0 group-hover/avatar:opacity-100 translate-y-2 group-hover/avatar:translate-y-0 
+                            transition-all duration-300 pointer-events-none bottom-12 -left-2 text-left
+                        `}>
+                            <p className="font-bold text-sm truncate bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">{user.name}</p>
+                            <p className="text-[10px] text-emerald-400/80 truncate">@{user.studentId}</p>
+                            {user.branch && (
+                                <p className="text-[10px] text-gray-300 mt-1 truncate">{user.branch}</p>
+                            )}
+                            {user.year && (
+                                <p className="text-[10px] text-gray-400">{getOrdinalYear(user.year)} Year</p>
+                            )}
+                            <div className="mt-2 pt-1.5 border-t border-emerald-500/10 flex items-center justify-between text-[9px] text-emerald-400 font-mono">
+                                <span>ONLINE</span>
+                                <span className="bg-emerald-500/10 px-1.5 py-0.5 rounded text-emerald-300 font-semibold uppercase">{user.role || 'student'}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
                         <p className="font-bold text-sm truncate text-white">{user.name}</p>
                         <p className="text-xs text-gray-400 truncate">@{user.studentId}</p>
                     </div>
-
-                    {/* Profile Tooltip (Only when collapsed) */}
-                    {!isOpen && (
-                        <div className="absolute left-16 bottom-0 p-4 bg-gray-900 border border-gray-700 text-white rounded-2xl opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none w-48 shadow-2xl glass-card z-50">
-                            <p className="font-bold text-lg truncate bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">@{user.studentId}</p>
-                            <div className="mt-2 text-xs text-emerald-500 font-mono">ONLINE / {user.role || 'STUDENT'}</div>
-                        </div>
-                    )}
                 </div>
             )}
         </div>

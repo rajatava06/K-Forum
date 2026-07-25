@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Gamepad2, PlusSquare, Search, User, Menu, X, Sparkles, Shield, Calendar, Users } from 'lucide-react';
+import { Home, Gamepad2, PlusSquare, Search, User, Menu, X, Sparkles, Shield, Calendar, Users, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import TrendingHashtags from '../TrendingHashtags';
 
@@ -21,6 +21,7 @@ const MobileHeader = () => {
 
     const navItems = [
         { path: '/', icon: Home, label: 'Home' },
+        { path: '/messages', icon: Mail, label: 'Chat' },
         { path: '/create-post', icon: PlusSquare, label: 'Create Post' },
         { path: '/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/buddy-connect', icon: Users, label: 'Buddy Connect' },
@@ -35,10 +36,10 @@ const MobileHeader = () => {
     return (
         <>
             {/* Top Bar */}
-            <div className="md:hidden fixed top-0 left-0 right-0 z-[60] glass-panel border-b border-gray-700/50 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
+            <div className="md:hidden fixed top-3 left-3 right-3 z-[60] glass-panel border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-lg shadow-black/35">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center border border-white/10">
-                        <span className="text-white font-black text-lg">K</span>
+                    <div className="w-8 h-8 shrink-0 bg-white/5 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20 shadow-[0_0_8px_rgba(255,255,255,0.1)] overflow-hidden">
+                        <img src="/logo.png" alt="K-Forum Logo" className="w-full h-full object-cover" />
                     </div>
                     <span className="text-lg font-bold">
                         <span className="text-white">K</span>

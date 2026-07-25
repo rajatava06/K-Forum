@@ -114,8 +114,8 @@ const Login = () => {
       <div className="max-w-md w-full">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-            <span className="text-white font-extrabold text-2xl">K</span>
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)] overflow-hidden">
+            <img src="/logo.png" alt="K-Forum Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">K-Forum</h1>
           <p className="text-gray-400 text-sm mt-1">Your student community</p>
