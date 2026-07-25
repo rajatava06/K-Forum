@@ -14,6 +14,11 @@ const CreatePost = () => {
     isAnonymous: false,
     eventDate: ''
   });
+  const [pollOptions, setPollOptions] = useState([
+    { text: '' },
+    { text: '' }
+  ]);
+  const [correctAnswers, setCorrectAnswers] = useState([]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,7 +33,9 @@ const CreatePost = () => {
     { id: 'lost-found', name: 'Lost & Found', icon: '🔍' },
     { id: 'clubs', name: 'Clubs', icon: '🏛️' },
     { id: 'general', name: 'General', icon: '💬' },
-    { id: 'Bookies', name: 'Bookies', icon: '🤖' }
+    { id: 'Bookies', name: 'Bookies', icon: '🤖' },
+    { id: 'qna', name: 'Q&A', icon: '❓' },
+    { id: 'polling', name: 'Polling', icon: '📊' }
   ];
 
   const handleChange = (e) => {
@@ -90,12 +97,27 @@ const CreatePost = () => {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
-      formDataToSend.append('content', formData.content);
+      formDataToSend.append('content', formData.content || (formData.category === 'qna' ? 'Q&A' : 'Poll'));
       formDataToSend.append('category', formData.category);
       formDataToSend.append('tags', formData.tags);
       formDataToSend.append('isAnonymous', formData.isAnonymous);
       if (formData.category === 'events' && formData.eventDate) {
         formDataToSend.append('eventDate', formData.eventDate);
+      }
+
+      if (['qna', 'polling'].includes(formData.category)) {
+        const cleanOptions = pollOptions.filter(opt => opt.text.trim() !== '');
+        if (cleanOptions.length < 2) {
+          throw new Error('Please provide at least 2 options.');
+        }
+        formDataToSend.append('pollOptions', JSON.stringify(cleanOptions));
+        
+        if (formData.category === 'qna') {
+          if (correctAnswers.length === 0) {
+            throw new Error('Please select at least one correct answer for Q&A.');
+          }
+          formDataToSend.append('correctAnswers', JSON.stringify(correctAnswers));
+        }
       }
 
       imageFiles.forEach(file => {
@@ -152,10 +174,10 @@ const CreatePost = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Title */}
+            {/* Title / Question */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
-                Title
+                {['qna', 'polling'].includes(formData.category) ? 'Question' : 'Title'}
               </label>
               <input
                 type="text"
@@ -165,7 +187,7 @@ const CreatePost = () => {
                 required
                 maxLength="200"
                 className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all placeholder-gray-600 font-medium text-lg"
-                placeholder="Give your post a catchy title..."
+                placeholder={['qna', 'polling'].includes(formData.category) ? 'Ask your question here...' : 'Give your post a catchy title...'}
               />
               <div className="flex justify-end">
                 <span className="text-xs text-gray-500 font-mono">
@@ -179,7 +201,7 @@ const CreatePost = () => {
               <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
                 Category
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {categories.map((category) => (
                   <label
                     key={category.id}
@@ -230,27 +252,114 @@ const CreatePost = () => {
               </div>
             )}
 
-            {/* Content */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
-                Content
-              </label>
-              <textarea
-                name="content"
-                value={formData.content}
-                onChange={handleChange}
-                required
-                maxLength="5000"
-                rows="8"
-                className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all resize-none placeholder-gray-600 leading-relaxed"
-                placeholder="What's on your mind? Share your story, confession, or question..."
-              />
-              <div className="flex justify-end">
-                <span className="text-xs text-gray-500 font-mono">
-                  {formData.content.length}/5000
-                </span>
+            {/* Options Builder for Q&A and Polling */}
+            {['qna', 'polling'].includes(formData.category) && (
+              <div className="space-y-4 animate-fade-in bg-white/5 p-6 rounded-2xl border border-white/5">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
+                    {formData.category === 'qna' ? 'Answer Options' : 'Poll Options'}
+                  </label>
+                  <span className="text-xs text-gray-500 font-mono">
+                    {pollOptions.length}/10 options
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {pollOptions.map((option, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      {formData.category === 'qna' && (
+                        <label className="flex items-center justify-center cursor-pointer select-none" title="Mark as correct answer">
+                          <input
+                            type="checkbox"
+                            checked={correctAnswers.includes(index)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setCorrectAnswers([...correctAnswers, index]);
+                              } else {
+                                setCorrectAnswers(correctAnswers.filter(i => i !== index));
+                              }
+                            }}
+                            className="w-5 h-5 rounded border-gray-600 text-emerald-500 focus:ring-emerald-500/30 bg-gray-800"
+                          />
+                        </label>
+                      )}
+
+                      <input
+                        type="text"
+                        value={option.text}
+                        onChange={(e) => {
+                          const newOpts = [...pollOptions];
+                          newOpts[index].text = e.target.value;
+                          setPollOptions(newOpts);
+                        }}
+                        required
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1 bg-white/5 text-white px-4 py-3 rounded-xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all text-sm font-medium"
+                      />
+
+                      {pollOptions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newOpts = pollOptions.filter((_, i) => i !== index);
+                            setPollOptions(newOpts);
+                            const newCorrects = correctAnswers
+                              .filter(i => i !== index)
+                              .map(i => (i > index ? i - 1 : i));
+                            setCorrectAnswers(newCorrects);
+                          }}
+                          className="p-2 text-red-400 hover:text-red-300 hover:bg-white/5 rounded-lg transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {pollOptions.length < 10 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPollOptions([...pollOptions, { text: '' }]);
+                    }}
+                    className="w-full py-3 bg-white/5 hover:bg-white/10 border border-dashed border-white/10 hover:border-emerald-500/30 rounded-xl text-sm font-bold text-gray-300 hover:text-emerald-400 transition-all flex items-center justify-center gap-2"
+                  >
+                    + Add Option
+                  </button>
+                )}
+                
+                {formData.category === 'qna' && correctAnswers.length === 0 && (
+                  <p className="text-xs text-amber-400/80 mt-2">
+                    ⚠️ Tip: Mark at least one correct answer using the checkbox.
+                  </p>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Content */}
+            {!['qna', 'polling'].includes(formData.category) && (
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
+                  Content
+                </label>
+                <textarea
+                  name="content"
+                  value={formData.content}
+                  onChange={handleChange}
+                  required={!['qna', 'polling'].includes(formData.category)}
+                  maxLength="5000"
+                  rows="8"
+                  className="w-full bg-white/5 text-white px-6 py-4 rounded-2xl border border-gray-700/50 focus:border-emerald-500/50 focus:bg-white/10 focus:outline-none transition-all resize-none placeholder-gray-600 leading-relaxed"
+                  placeholder="What's on your mind? Share your story, confession, or question..."
+                />
+                <div className="flex justify-end">
+                  <span className="text-xs text-gray-500 font-mono">
+                    {formData.content.length}/5000
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Tags */}
             <div className="space-y-2">
@@ -366,7 +475,7 @@ const CreatePost = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading || !formData.title || !formData.content || !formData.category}
+                disabled={loading || !formData.title || (!['qna', 'polling'].includes(formData.category) && !formData.content) || !formData.category}
                 className="w-full sm:w-auto relative overflow-hidden bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 sm:px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
