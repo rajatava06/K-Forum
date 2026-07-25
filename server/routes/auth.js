@@ -81,11 +81,22 @@ router.post('/firebase', async (req, res) => {
 
     if (!user) {
       console.log('4. User not found. Creating new Google account...');
-      // Create new Google user (no password / studentId required)
+      
+      // Auto-generate a clean unique studentId handle for Google users
+      const cleanHandle = (name || email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+      const randomDigits = Math.floor(1000 + Math.random() * 9000);
+      let initialStudentId = `${cleanHandle}_${randomDigits}`;
+
+      const existingHandle = await User.findOne({ studentId: initialStudentId });
+      if (existingHandle) {
+        initialStudentId = `${cleanHandle}_${Date.now().toString().slice(-4)}`;
+      }
+
       user = new User({
         name: name || email.split('@')[0],
         email,
         googleId: uid,
+        studentId: initialStudentId,
         authProvider: 'google',
         avatar: picture || '',
         isVerified: true,     // Google already verified the email
@@ -98,6 +109,10 @@ router.post('/firebase', async (req, res) => {
       user.googleId = uid;
       user.authProvider = 'google';
       if (picture && !user.avatar) user.avatar = picture;
+      if (!user.studentId) {
+        const cleanHandle = (user.name || user.email.split('@')[0]).toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+        user.studentId = `${cleanHandle}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
       user.isVerified = true;
       await user.save();
       console.log('5. Local user linked:', user._id);
