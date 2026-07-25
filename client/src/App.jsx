@@ -15,6 +15,7 @@ import UserProfile from './pages/UserProfile';
 import Admin from './pages/Admin';
 import BuddyConnectPage from './pages/BuddyConnectPage';
 import Wordle from './pages/Wordle';
+import Messages from './pages/Messages';
 
 import CalendarPage from './pages/CalendarPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
@@ -61,6 +62,14 @@ const MainContainer = () => {
           element={
             <ProtectedRoute>
               <Wordle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
             </ProtectedRoute>
           }
         />

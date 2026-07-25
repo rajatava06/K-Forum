@@ -2,6 +2,8 @@ import express from 'express';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import { auth } from '../middleware/auth.js';
+import { filterProfanity } from '../services/profanityFilter.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -14,7 +16,19 @@ router.get('/conversations', auth, async (req, res) => {
             .populate('participants', 'name avatar studentId')
             .sort({ 'lastMessage.timestamp': -1 });
 
-        res.json(conversations);
+        // Enrich conversations with connection count data
+        const enrichedConversations = await Promise.all(conversations.map(async (conv) => {
+            const otherParticipant = conv.participants.find(p => p._id.toString() !== req.userId);
+            const userDoc = await User.findById(otherParticipant._id).select('connections');
+            
+            return {
+                ...conv.toObject(),
+                otherUser: otherParticipant,
+                connectionCount: userDoc?.connections?.length || 0
+            };
+        }));
+
+        res.json(enrichedConversations);
     } catch (error) {
         console.error('Get conversations error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -40,13 +54,16 @@ router.get('/:conversationId/messages', auth, async (req, res) => {
 // Send a message
 router.post('/:conversationId/messages', auth, async (req, res) => {
     try {
-        const { content } = req.body;
+        let { content } = req.body;
         const { conversationId } = req.params;
+
+        // Filter profanity from message
+        const cleanContent = filterProfanity(content);
 
         const newMessage = new Message({
             conversationId,
             sender: req.userId,
-            content
+            content: cleanContent
         });
 
         await newMessage.save();
@@ -54,7 +71,7 @@ router.post('/:conversationId/messages', auth, async (req, res) => {
         // Update conversation last message
         await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: {
-                content,
+                content: cleanContent,
                 sender: req.userId,
                 timestamp: new Date()
             }

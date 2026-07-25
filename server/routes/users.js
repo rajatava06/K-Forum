@@ -66,7 +66,7 @@ router.get('/all-users', auth, async (req, res) => {
 router.get('/connections', auth, async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate('connections', 'name avatar studentId branch year');
-    res.json(user.connections);
+    res.json({ connections: user.connections || [] });
   } catch (error) {
     console.error('Get connections error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -112,7 +112,7 @@ router.post('/connect/:userId', auth, async (req, res) => {
 
     // Check if already requested or connected
     const existingRequest = targetUser.connectionRequests.find(
-      r => r.user.toString() === req.userId
+      r => r.user.toString() === req.userId && r.status === 'pending'
     );
     const isConnected = targetUser.connections.includes(req.userId);
 
@@ -123,16 +123,31 @@ router.post('/connect/:userId', auth, async (req, res) => {
     // Add request to target user
     targetUser.connectionRequests.push({
       user: req.userId,
-      status: 'pending'
+      status: 'pending',
+      createdAt: new Date()
     });
     await targetUser.save();
 
     // Send email notification to target user
-    const sender = await User.findById(req.userId).select('name');
-    emailService.sendConnectionRequestEmail(
-      targetUser.email, targetUser.name, sender.name
+    const sender = await User.findById(req.userId).select('name email');
+    
+    console.log(' DEBUG - Sender:', sender);
+    console.log('DEBUG - Sender Name:', sender?.name);
+    console.log(' DEBUG - Target User Email:', targetUser.email);
+
+    if (!sender?.name) {
+      console.error('ERROR: Sender name is missing!');
+    }
+
+    // Send email
+    await emailService.sendConnectionRequestEmail(
+      targetUser.email, 
+      targetUser.name, 
+      sender?.name || 'Unknown User',
+      sender?.email || 'noreply@kforum.online'
     ).catch(err => console.error('Failed to send connect email:', err));
 
+    console.log('Connection request sent to:', targetUser.email);
     res.json({ message: 'Connection request sent' });
   } catch (error) {
     console.error('Connect error:', error);
@@ -158,6 +173,7 @@ router.post('/connect/:userId/accept', auth, async (req, res) => {
     // Add to connections for both
     user.connections.push(userId);
     user.connectionRequests[requestIndex].status = 'accepted';
+    user.connectionRequests[requestIndex].respondedAt = new Date();
 
     const requester = await User.findById(userId);
     requester.connections.push(req.userId);
@@ -177,6 +193,13 @@ router.post('/connect/:userId/accept', auth, async (req, res) => {
       });
       await newConv.save();
     }
+
+    // Send acceptance email
+    await emailService.sendConnectionAcceptedEmail(
+      requester.email,
+      requester.name,
+      user.name
+    ).catch(err => console.error('Failed to send acceptance email:', err));
 
     res.json({ message: 'Connection accepted and chat initialized' });
   } catch (error) {
@@ -200,7 +223,16 @@ router.post('/connect/:userId/reject', auth, async (req, res) => {
     }
 
     user.connectionRequests[requestIndex].status = 'rejected';
+    user.connectionRequests[requestIndex].respondedAt = new Date();
     await user.save();
+
+    // Send rejection email
+    const requester = await User.findById(userId);
+    await emailService.sendConnectionRejectedEmail(
+      requester.email,
+      requester.name,
+      user.name
+    ).catch(err => console.error('Failed to send rejection email:', err));
 
     res.json({ message: 'Connection rejected' });
   } catch (error) {
@@ -224,10 +256,16 @@ router.get('/:id', async (req, res) => {
       moderationStatus: 'approved'
     });
 
+    // Count accepted connections
+    const acceptedCount = user.connectionRequests?.filter(
+      r => r.status === 'accepted'
+    ).length || 0;
+
     res.json({
       ...user.toObject(),
       postCount,
-      connectionCount: user.connections?.length || 0
+      connectionCount: user.connections?.length || 0,
+      acceptedCount: acceptedCount
     });
   } catch (error) {
     console.error('Get user error:', error);

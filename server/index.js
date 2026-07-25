@@ -1,7 +1,9 @@
+import './loadEnv.js';
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
+
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
@@ -9,8 +11,9 @@ import postRoutes from './routes/posts.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
 import wordleRoutes from './routes/wordle.js';
+import emailService from "./services/emailService.js";
 
-dotenv.config();
+
 
 const app = express();
 const server = createServer(app);

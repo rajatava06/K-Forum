@@ -21,6 +21,7 @@
     "k-forum-platform-root": "file:..",
     "mongoose": "^8.21.0",
     "multer": "^1.4.5-lts.1",
+    "resend": "^3.5.0",
     "socket.io": "^4.7.4"
   },
   "devDependencies": {

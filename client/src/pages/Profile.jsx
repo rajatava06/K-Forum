@@ -338,7 +338,7 @@ const Profile = () => {
               {/* Stats */}
               <div className="mt-6 pt-6 border-t border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4">Forum Statistics</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-[#17d059]">{profile.postCount || 0}</div>
                     <div className="text-sm text-gray-400">Posts</div>
@@ -346,6 +346,10 @@ const Profile = () => {
                   <div className="text-center">
                     <div className="text-2xl font-bold text-[#17d059]">{profile.reputation || 0}</div>
                     <div className="text-sm text-gray-400">Points</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#17d059]">{profile.connectionCount || 0}</div>
+                    <div className="text-sm text-gray-400">Connections</div>
                   </div>
                 </div>
               </div>
