@@ -44,7 +44,7 @@ const PostCard = ({ post, onDelete }) => {
   };
 
   const handleDelete = async () => {
-    if (!user || !post.author || (user._id !== post.author._id && !user.isAdmin)) {
+    if (!user || !post.author || (user._id !== post.author._id && user.role !== 'admin')) {
       toast.error('You do not have permission to delete this post');
       return;
     }
@@ -198,7 +198,7 @@ const PostCard = ({ post, onDelete }) => {
                     <Flag className="w-4 h-4" />
                     <span>Report Post</span>
                   </button>
-                  {user && post.author && (user._id === post.author._id || user.isAdmin) && (
+                  {user && post.author && (user._id === post.author._id || user.role === 'admin') && (
                     <button
                       onClick={handleDelete}
                       className="w-full px-4 py-2 text-left text-red-400 hover:bg-white/5 flex items-center space-x-2"

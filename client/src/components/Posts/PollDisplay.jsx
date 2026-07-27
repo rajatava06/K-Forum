@@ -13,7 +13,8 @@ const PollDisplay = ({ post: initialPost }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const isQna = post.postType === 'qna';
+  // Fallback to category for backward compat with posts created before postType field existed
+  const isQna = post.postType === 'qna' || (post.postType === 'normal' && post.category === 'qna');
   const hasVoted = post.userPollVote !== undefined && post.userPollVote !== null;
   const isAuthor = user && post.author && 
     (post.author._id?.toString() || post.author?.toString()) === user._id?.toString();
