@@ -31,18 +31,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             {/* Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="absolute -right-3 top-[56px] -translate-y-1/2 bg-gray-800 border border-emerald-500/30 text-emerald-400 p-1 rounded-full shadow-lg hover:bg-gray-700 hover:scale-110 transition-all z-50"
+                className="absolute -right-3 top-[56px] -translate-y-1/2 bg-gray-800 border border-white/10 text-gray-300 p-1 rounded-full hover:bg-gray-700 hover:scale-110 transition-all z-50"
             >
                 {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
             </button>
 
             {/* Minimal Logo */}
-            <div className={`flex items-center ${isOpen ? 'justify-start pl-4' : 'justify-center'} mb-12 transition-all duration-300`}>
-                <div className="w-12 h-12 shrink-0 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 animate-float">
+            <div className={`flex items-center ${isOpen ? 'justify-start px-4' : 'justify-center px-4'} mb-12 transition-all duration-300`}>
+                <div className="w-12 h-12 shrink-0 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center border border-white/10">
                     <span className="text-white font-extrabold text-2xl">K</span>
                 </div>
                 <div className={`ml-4 overflow-hidden transition-all duration-300 ${isOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>
-                    <span className="text-xl font-bold text-white whitespace-nowrap">K-Forum</span>
+                    <span className="text-xl font-bold whitespace-nowrap">
+                        <span className="text-white">K</span>
+                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">-Forum</span>
+                    </span>
                 </div>
             </div>
 
@@ -56,7 +59,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             relative flex items-center group rounded-2xl transition-all duration-300 overflow-hidden
                             ${isOpen ? 'w-full px-4 py-3 justify-start' : 'w-12 h-12 justify-center'}
                             ${isActive
-                                ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/40'
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-400 text-white'
                                 : 'text-gray-400 hover:bg-white/10 hover:text-white'
                             }
                         `}
@@ -65,7 +68,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                             <>
                                 <item.icon
                                     strokeWidth={isActive ? 2.5 : 2}
-                                    className={`w-6 h-6 shrink-0 transition-transform ${!isOpen && 'group-hover:rotate-6'} ${item.highlight ? 'animate-pulse' : ''}`}
+                                    className={`w-6 h-6 shrink-0 transition-transform ${!isOpen && 'group-hover:rotate-6'}`}
                                 />
 
                                 <span className={`ml-3 font-semibold whitespace-nowrap transition-all duration-300 ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10 absolute'}`}>
@@ -74,7 +77,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
                                 {/* Hover Tooltip (Only when collapsed) */}
                                 {!isOpen && (
-                                    <span className="absolute left-16 px-4 py-2 bg-gray-900 border border-emerald-500/30 text-emerald-400 text-sm font-bold rounded-xl opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 shadow-2xl backdrop-blur-md">
+                                    <span className="absolute left-16 px-4 py-2 bg-gray-900 border border-white/10 text-gray-200 text-sm font-bold rounded-xl opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-50 backdrop-blur-md">
                                         {item.label}
                                     </span>
                                 )}

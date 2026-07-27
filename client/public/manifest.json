@@ -7,13 +7,13 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "/kflogo.png",
+      "src": "https://cdn.prod.website-files.com/6898a84f39288fa31fb19eb3/69b0665adef37be74e06b2ad_bd527d80e92a2a3539e8debad5ace852_kf.png",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/kflogo.png",
+      "src": "https://cdn.prod.website-files.com/6898a84f39288fa31fb19eb3/69b0665adef37be74e06b2ad_bd527d80e92a2a3539e8debad5ace852_kf.png",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"

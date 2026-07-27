@@ -127,6 +127,65 @@ router.get('/', optionalAuth, async (req, res) => {
       query.$text = { $search: search };
     }
 
+    if (sortBy === 'random') {
+      const posts = await Post.aggregate([
+        { $match: query },
+        { $sample: { size: parseInt(limit) } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'author',
+            foreignField: '_id',
+            as: 'author'
+          }
+        },
+        { $unwind: { path: '$author', preserveNullAndEmptyArrays: true } }
+      ]);
+
+      const processedPosts = posts.map(post => {
+        // Calculate reaction counts
+        const reactionCounts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+        (post.reactions || []).forEach(r => {
+          reactionCounts[r.type] = (reactionCounts[r.type] || 0) + 1;
+        });
+
+        // Find user's reaction if authenticated
+        let userReaction = null;
+        if (req.userId) {
+          const userReact = (post.reactions || []).find(
+            r => r.user.toString() === req.userId.toString()
+          );
+          userReaction = userReact?.type || null;
+        }
+
+        return {
+          ...post,
+          author: post.isAnonymous ? null : {
+            _id: post.author?._id,
+            name: post.author?.name,
+            studentId: post.author?.studentId,
+            year: post.author?.year,
+            branch: post.author?.branch,
+            avatar: post.author?.avatar
+          },
+          upvoteCount: post.upvotes?.length || 0,
+          downvoteCount: post.downvotes?.length || 0,
+          reactionCounts,
+          totalReactions: (post.reactions || []).length,
+          userReaction
+        };
+      });
+
+      const totalCount = await Post.countDocuments(query);
+
+      return res.json({
+        posts: processedPosts,
+        totalPages: Math.ceil(totalCount / limit),
+        currentPage: parseInt(page),
+        total: totalCount
+      });
+    }
+
     const posts = await Post.find(query)
       .populate('author', 'name studentId year branch avatar')
       .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
@@ -263,8 +322,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
       for (const file of req.files) {
         try {
           console.log(`   Uploading: ${file.originalname} (${(file.size / 1024).toFixed(1)} KB)`);
-          const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-          const imageUrl = await uploadImage(base64Image);
+          const imageUrl = await uploadImage(file.buffer, file.mimetype);
           console.log(`   ✅ Uploaded: ${imageUrl.substring(0, 60)}...`);
           attachments.push({
             url: imageUrl,
@@ -500,8 +558,7 @@ router.post('/:id/comments', auth, upload.array('images', 5), async (req, res) =
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         try {
-          const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-          const imageUrl = await uploadImage(base64Image);
+          const imageUrl = await uploadImage(file.buffer, file.mimetype);
           attachments.push({
             url: imageUrl,
             type: 'image',

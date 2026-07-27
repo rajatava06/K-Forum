@@ -70,9 +70,9 @@ const EventCalendar = () => {
 
     if (loading) {
         return (
-            <div className="glass-card calendar-mobile rounded-3xl md:rounded-3xl p-4 md:p-3 w-full md:w-[250px] md:min-w-[250px] md:max-w-[250px] animate-pulse">
-                <div className="h-8 md:h-6 w-40 md:w-32 bg-white/5 rounded mb-4"></div>
-                <div className="grid grid-cols-7 gap-1.5 md:gap-1">
+            <div className="glass-panel rounded-3xl p-3 w-full animate-pulse">
+                <div className="h-6 w-32 bg-white/5 rounded mb-4"></div>
+                <div className="grid grid-cols-7 gap-1">
                     {[...Array(35)].map((_, i) => (
                         <div key={i} className="h-11 md:h-8 w-full bg-white/5 rounded-xl md:rounded-lg"></div>
                     ))}
@@ -82,7 +82,7 @@ const EventCalendar = () => {
     }
 
     return (
-        <div className="glass-card calendar-mobile rounded-3xl md:rounded-3xl p-5 md:p-3 relative overflow-hidden w-full md:w-[250px] md:min-w-[250px] md:max-w-[250px]">
+        <div className="glass-panel rounded-3xl p-3 relative overflow-hidden w-full">
             {/* Header */}
             <div className="flex items-center justify-between mb-4 md:mb-3">
                 <h3 className="font-bold text-white flex items-center gap-2.5 md:gap-2 text-base md:text-sm">

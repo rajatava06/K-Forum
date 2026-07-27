@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../services/axiosSetup';
 import toast from 'react-hot-toast';
-import { MessageCircle, Eye, Clock, User, Send, MoreVertical, Flag, Trash2, Image, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { MessageCircle, Eye, Clock, User, Send, MoreVertical, Flag, Trash2, Image, X, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import PostReactions from '../components/Posts/PostReactions';
 import ImageViewer from '../components/ImageViewer';
 
@@ -13,7 +13,9 @@ const PostDetail = () => {
   const { user } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [postLoading, setPostLoading] = useState(true);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const loading = postLoading || commentsLoading;
   // Bookies voting state
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [downvoteCount, setDownvoteCount] = useState(0);
@@ -27,7 +29,27 @@ const PostDetail = () => {
   const [commentImagePreviews, setCommentImagePreviews] = useState([]);
   const [viewerImages, setViewerImages] = useState([]);
 
+  // Restore scroll position when going back to home
+  const handleBack = useCallback(() => {
+    const savedWindow = sessionStorage.getItem('homeScrollY');
+    const savedFeed = sessionStorage.getItem('feedScrollY');
+    navigate('/');
+    // Restore scroll after navigation paints
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (savedWindow) window.scrollTo({ top: parseInt(savedWindow, 10), behavior: 'instant' });
+        if (savedFeed) {
+          // Desktop feed column (lg:overflow-y-auto)
+          const feedEl = document.querySelector('.feed-scroll');
+          if (feedEl) feedEl.scrollTop = parseInt(savedFeed, 10);
+        }
+      }, 80);
+    });
+  }, [navigate]);
+
   useEffect(() => {
+    setPostLoading(true);
+    setCommentsLoading(true);
     fetchPost();
     fetchComments();
   }, [id]);
@@ -42,6 +64,8 @@ const PostDetail = () => {
     } catch (error) {
       console.error('Error fetching post:', error);
       toast.error('Post not found');
+    } finally {
+      setPostLoading(false);
     }
   };
 
@@ -52,7 +76,7 @@ const PostDetail = () => {
     } catch (error) {
       console.error('Error fetching comments:', error);
     } finally {
-      setLoading(false);
+      setCommentsLoading(false);
     }
   };
 
@@ -254,8 +278,38 @@ const PostDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#17d059]"></div>
+      <div className="min-h-screen py-8">
+        <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 space-y-6">
+          {/* Back button skeleton */}
+          <div className="h-10 w-28 bg-white/5 rounded-2xl animate-pulse" />
+          {/* Post skeleton */}
+          <div className="glass-panel rounded-2xl p-4 sm:p-8 animate-pulse space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/5" />
+              <div className="space-y-2">
+                <div className="h-4 w-32 bg-white/5 rounded" />
+                <div className="h-3 w-20 bg-white/5 rounded" />
+              </div>
+            </div>
+            <div className="h-8 w-2/3 bg-white/5 rounded" />
+            <div className="space-y-2">
+              <div className="h-4 w-full bg-white/5 rounded" />
+              <div className="h-4 w-full bg-white/5 rounded" />
+              <div className="h-4 w-3/4 bg-white/5 rounded" />
+            </div>
+          </div>
+          {/* Comments skeleton */}
+          {[1, 2].map(i => (
+            <div key={i} className="glass-card rounded-2xl p-4 sm:p-6 animate-pulse space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/5" />
+                <div className="h-4 w-24 bg-white/5 rounded" />
+              </div>
+              <div className="h-4 w-full bg-white/5 rounded" />
+              <div className="h-4 w-2/3 bg-white/5 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -265,16 +319,16 @@ const PostDetail = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Post not found</h2>
-          <Link to="/" className="text-[#17d059] hover:text-emerald-400">
-            Return to home
-          </Link>
+          <button onClick={handleBack} className="text-emerald-400 hover:text-emerald-300 flex items-center gap-2 mx-auto">
+            <ArrowLeft className="w-4 h-4" /> Return to home
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 overflow-x-hidden">
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] px-4">
@@ -310,6 +364,15 @@ const PostDetail = () => {
       )}
 
       <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={handleBack}
+          className="mb-6 flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 transition-all text-sm font-semibold"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
         {/* Post */}
         <div className="glass-panel rounded-2xl p-4 sm:p-8 mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -332,7 +395,7 @@ const PostDetail = () => {
                 <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${getCategoryColor(post.category)}`}>
                   {post.category.replace('-', ' ').toUpperCase()}
                 </span>
-                <div className="relative">
+                <div className="relative z-20">
                   <button
                     onClick={() => setShowPostOptions(!showPostOptions)}
                     className="p-1 hover:bg-gray-700 rounded-full transition-colors"
@@ -373,11 +436,11 @@ const PostDetail = () => {
 
             {/* Image attachments */}
             {post.attachments && post.attachments.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className={post.attachments.length === 1 ? 'w-full' : 'grid grid-cols-2 gap-3'}>
                 {post.attachments.map((attachment, index) => (
                   <div
                     key={index}
-                    className="relative group cursor-pointer aspect-square overflow-hidden rounded-lg"
+                    className="relative group cursor-pointer rounded-lg bg-black/10 overflow-hidden"
                     onClick={() => {
                       setViewerImages(post.attachments.map(a => a.url));
                       setSelectedImageIndex(index);
@@ -387,24 +450,18 @@ const PostDetail = () => {
                     <img
                       src={attachment.url}
                       alt={attachment.filename}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200"
+                      className="w-full h-auto max-h-[700px] object-contain group-hover:opacity-90 transition-opacity duration-200"
                     />
-                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-200" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Image className="w-8 h-8 text-white" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <div className="bg-black/40 rounded-full p-2">
+                        <Image className="w-6 h-6 text-white" />
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-            {/* Image Viewer */}
-            {showImageViewer && (
-              <ImageViewer
-                images={viewerImages}
-                initialIndex={selectedImageIndex}
-                onClose={() => setShowImageViewer(false)}
-              />
-            )}
+
           </div>
         </div>
 
@@ -513,7 +570,7 @@ const PostDetail = () => {
                 rows="4"
                 required
               />
-              <div className="flex flex-col space-y-4 mt-4">
+              <div className="flex flex-col gap-3 mt-4">
                 {/* Image Previews */}
                 {commentImagePreviews.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -532,45 +589,43 @@ const PostDetail = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {post.category !== 'Bookies' && (
-                      <label className="flex items-center space-x-2 text-gray-400 cursor-pointer hover:text-white transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={isAnonymousComment}
-                          onChange={(e) => setIsAnonymousComment(e.target.checked)}
-                          className="rounded border-gray-600 text-[#17d059] focus:ring-[#17d059]"
-                        />
-                        <span className="text-sm">Comment anonymously</span>
-                      </label>
-                    )}
+                {/* Controls row — wraps on mobile */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {post.category !== 'Bookies' && (
+                    <label className="flex items-center gap-2 text-gray-400 cursor-pointer hover:text-white transition-colors text-sm">
+                      <input
+                        type="checkbox"
+                        checked={isAnonymousComment}
+                        onChange={(e) => setIsAnonymousComment(e.target.checked)}
+                        className="rounded border-gray-600 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span>Comment anonymously</span>
+                    </label>
+                  )}
 
-                    {post.category === 'Bookies' && (
-                      <label className="flex items-center space-x-2 text-[#17d059] cursor-pointer hover:text-emerald-400 transition-colors">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleCommentImageChange}
-                          className="hidden"
-                          id="comment-image-upload"
-                        />
-                        <div className="flex items-center space-x-2 bg-white/5 px-4 py-2 rounded-xl border border-white/5 group">
-                          <Image className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          <span className="text-sm font-bold">Add Answer Image (Max 10MB)</span>
-                        </div>
-                      </label>
-                    )}
-                  </div>
+                  {(post.category === 'Bookies' || post.category === 'academics') && (
+                    <label htmlFor="comment-image-upload" className="flex items-center gap-2 text-emerald-400 cursor-pointer hover:text-emerald-300 transition-colors bg-white/5 px-3 py-2 rounded-xl border border-white/5 text-sm font-bold">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleCommentImageChange}
+                        className="hidden"
+                        id="comment-image-upload"
+                      />
+                      <Image className="w-4 h-4" />
+                      <span>Add Image</span>
+                    </label>
+                  )}
 
+                  {/* Submit — grows to fill remaining space on mobile */}
                   <button
                     type="submit"
                     disabled={submittingComment || (!newComment.trim() && commentImageFiles.length === 0)}
-                    className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-400 text-white px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all border border-white/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm"
                   >
                     <Send className="w-4 h-4" />
-                    <span className="font-bold">{submittingComment ? 'Posting...' : 'Post Answer'}</span>
+                    <span>{submittingComment ? 'Posting...' : 'Post Answer'}</span>
                   </button>
                 </div>
               </div>
@@ -614,14 +669,14 @@ const PostDetail = () => {
                         {comment.attachments.map((attachment, idx) => (
                           <div
                             key={idx}
-                            className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group border border-white/5 hover:border-emerald-500/30 transition-all"
+                            className="relative rounded-xl overflow-hidden cursor-pointer group border border-white/5 hover:border-emerald-500/30 transition-all bg-black/10"
                             onClick={() => {
                               setViewerImages(comment.attachments.map(a => a.url));
                               setSelectedImageIndex(idx);
                               setShowImageViewer(true);
                             }}
                           >
-                            <img src={attachment.url} alt="comment-img" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <img src={attachment.url} alt="comment-img" className="w-full h-auto max-h-[400px] object-contain group-hover:opacity-90 transition-opacity duration-200" />
                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Eye className="w-5 h-5 text-white" />
                             </div>
@@ -675,6 +730,15 @@ const PostDetail = () => {
           ))
         )}
       </div>
+
+      {/* Image Viewer — works for both post and comment images */}
+      {showImageViewer && (
+        <ImageViewer
+          images={viewerImages}
+          initialIndex={selectedImageIndex}
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </div >
   );
 };

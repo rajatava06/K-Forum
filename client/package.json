@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^1.13.2",
     "canvas-confetti": "^1.9.4",
+    "firebase": "^12.10.0",
     "k-forum-platform-root": "file:..",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

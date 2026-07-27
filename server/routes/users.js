@@ -2,8 +2,10 @@ import express from 'express';
 import User from '../models/User.js';
 import Post from '../models/Post.js';
 import { auth } from '../middleware/auth.js';
+import Conversation from '../models/Conversation.js';
 import { uploadImage } from '../config/cloudinary.js';
 import multer from 'multer';
+import emailService from '../services/emailService.js';
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -29,18 +31,33 @@ router.get('/suggestions', auth, async (req, res) => {
     const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const excludeIds = [user._id, ...user.connections, ...user.connectionRequests.map(r => r.user)];
+    // Only exclude the current user so the widget always has people to show
+    const excludeIds = [user._id];
 
-    // Find random users not in exclude list
+    // Find random users
     const suggestions = await User.aggregate([
       { $match: { _id: { $nin: excludeIds } } },
-      { $sample: { size: 5 } },
+      { $sample: { size: 8 } },
       { $project: { name: 1, avatar: 1, studentId: 1, branch: 1, year: 1 } }
     ]);
 
     res.json(suggestions);
   } catch (error) {
     console.error('Get suggestions error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Fallback: get all users (excluding current user) for BuddyConnect when suggestions returns empty
+router.get('/all-users', auth, async (req, res) => {
+  try {
+    const users = await User.find(
+      { _id: { $ne: req.userId } },
+      { name: 1, avatar: 1, studentId: 1, branch: 1, year: 1 }
+    ).limit(20);
+    res.json(users);
+  } catch (error) {
+    console.error('Get all users error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -52,6 +69,30 @@ router.get('/connections', auth, async (req, res) => {
     res.json(user.connections);
   } catch (error) {
     console.error('Get connections error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get incoming connection requests
+router.get('/requests', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).populate({
+      path: 'connectionRequests.user',
+      select: 'name avatar studentId branch year'
+    });
+
+    // Filter out only pending requests
+    const pendingRequests = user.connectionRequests
+      .filter(req => req.status === 'pending')
+      .map(req => ({
+        ...req.user.toObject(),
+        requestId: req._id,
+        requestedAt: req.createdAt
+      }));
+
+    res.json(pendingRequests);
+  } catch (error) {
+    console.error('Get requests error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -86,6 +127,12 @@ router.post('/connect/:userId', auth, async (req, res) => {
     });
     await targetUser.save();
 
+    // Send email notification to target user
+    const sender = await User.findById(req.userId).select('name');
+    emailService.sendConnectionRequestEmail(
+      targetUser.email, targetUser.name, sender.name
+    ).catch(err => console.error('Failed to send connect email:', err));
+
     res.json({ message: 'Connection request sent' });
   } catch (error) {
     console.error('Connect error:', error);
@@ -118,9 +165,46 @@ router.post('/connect/:userId/accept', auth, async (req, res) => {
     await user.save();
     await requester.save();
 
-    res.json({ message: 'Connection accepted' });
+    // Check if conversation already exists
+    const existingConv = await Conversation.findOne({
+      participants: { $all: [req.userId, userId] }
+    });
+
+    if (!existingConv) {
+      // Create new conversation
+      const newConv = new Conversation({
+        participants: [req.userId, userId]
+      });
+      await newConv.save();
+    }
+
+    res.json({ message: 'Connection accepted and chat initialized' });
   } catch (error) {
     console.error('Accept connection error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reject connection request
+router.post('/connect/:userId/reject', auth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(req.userId);
+
+    const requestIndex = user.connectionRequests.findIndex(
+      r => r.user.toString() === userId && r.status === 'pending'
+    );
+
+    if (requestIndex === -1) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    user.connectionRequests[requestIndex].status = 'rejected';
+    await user.save();
+
+    res.json({ message: 'Connection rejected' });
+  } catch (error) {
+    console.error('Reject connection error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -142,7 +226,8 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       ...user.toObject(),
-      postCount
+      postCount,
+      connectionCount: user.connections?.length || 0
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -160,8 +245,7 @@ router.put('/profile', auth, upload.single('avatar'), async (req, res) => {
     if (req.file) {
       try {
         // Convert buffer to base64
-        const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        const avatarUrl = await uploadImage(base64Image);
+        const avatarUrl = await uploadImage(req.file.buffer, req.file.mimetype);
         updateData.avatar = avatarUrl;
       } catch (error) {
         console.error('Avatar upload error:', error);

@@ -16,23 +16,31 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
     minlength: 6
+    // Optional: Google-authenticated users won't have a password
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true   // allows null for non-Google users
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
   },
   studentId: {
     type: String,
-    required: true,
-    unique: true
+    unique: true,
+    sparse: true  // Google users may not have a studentId initially
   },
   year: {
     type: Number,
-    required: true,
     min: 1,
     max: 4
   },
   branch: {
-    type: String,
-    required: true
+    type: String
   },
   avatar: {
     type: String,
@@ -116,12 +124,16 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  // Skip hashing for Google-authenticated users or unchanged passwords
+  if (!this.isModified('password') || !this.password || this.authProvider === 'google') return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 userSchema.methods.comparePassword = async function (password) {
+  if (this.authProvider === 'google' || !this.password) {
+    return false; // Google users should login via Google
+  }
   return await bcrypt.compare(password, this.password);
 };
 

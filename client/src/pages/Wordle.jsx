@@ -278,7 +278,7 @@ const Wordle = () => {
                 </div>
 
                 {/* Game Board */}
-                <div className="grid gap-2 mb-8">
+                <div className="grid gap-1 sm:gap-2 mb-8 mx-auto w-fit">
                     {[...Array(MAX_ATTEMPTS)].map((_, rowIndex) => {
                         const guess = gameState.guesses[rowIndex];
                         const isCurrentRow = rowIndex === gameState.guesses.length && !gameState.completed;

@@ -4,6 +4,8 @@ import { Home, Gamepad2, PlusSquare, Search, User, Menu, X, Sparkles, Shield, Ca
 import { useAuth } from '../../contexts/AuthContext';
 import TrendingHashtags from '../TrendingHashtags';
 
+import BuddyConnect from '../BuddyConnect';
+
 const MobileHeader = () => {
     const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +25,6 @@ const MobileHeader = () => {
         { path: '/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/buddy-connect', icon: Users, label: 'Buddy Connect' },
         { path: '/wordle', icon: Gamepad2, label: 'K-Wordle' },
-        { path: '/', icon: Search, label: 'Search' },
         { path: '/profile', icon: User, label: 'Profile' }
     ];
 
@@ -36,11 +37,12 @@ const MobileHeader = () => {
             {/* Top Bar */}
             <div className="md:hidden fixed top-0 left-0 right-0 z-[60] glass-panel border-b border-gray-700/50 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <div className="w-8 h-8 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center border border-white/10">
                         <span className="text-white font-black text-lg">K</span>
                     </div>
-                    <span className="text-lg font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        Forum
+                    <span className="text-lg font-bold">
+                        <span className="text-white">K</span>
+                        <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">-Forum</span>
                     </span>
                 </div>
 
@@ -92,7 +94,6 @@ const MobileHeader = () => {
                                     <>
                                         <item.icon className="w-6 h-6" strokeWidth={2.5} />
                                         <span className="font-bold text-lg">{item.label}</span>
-                                        {isActive && <Sparkles className="w-4 h-4 ml-auto text-emerald-400 animate-pulse" />}
                                     </>
                                 )}
                             </NavLink>
@@ -102,6 +103,10 @@ const MobileHeader = () => {
                     {/* Trending Section */}
                     <div className="mt-4 pt-6 border-t border-gray-800">
                         <TrendingHashtags onTagClick={handleTagClick} />
+                    </div>
+
+                    <div className="mt-6">
+                        <BuddyConnect />
                     </div>
 
                     <p className="text-center text-gray-600 text-xs mt-8 pb-4 shrink-0">

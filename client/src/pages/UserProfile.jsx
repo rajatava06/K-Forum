@@ -102,6 +102,10 @@ const UserProfile = () => {
                   <span className="ml-2 text-gray-300">Posts</span>
                 </div>
                 <div>
+                  <span className="text-2xl font-bold text-white">{user.connectionCount || 0}</span>
+                  <span className="ml-2 text-gray-300">Connections</span>
+                </div>
+                <div>
                   <span className="text-2xl font-bold text-white">{user.reputation}</span>
                   <span className="ml-2 text-gray-300">Reputation</span>
                 </div>

@@ -24,7 +24,10 @@ const Navbar = () => {
               {/* <span className="text-white font-bold text-lg">K</span> */}
               <img src="/kflogo.png" alt="Logo" height={50} />
             </div>
-            <span className="text-xl font-bold text-white">K-Forum</span>
+            <span className="text-xl font-bold whitespace-nowrap">
+              <span className="text-white">K</span>
+              <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">-Forum</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

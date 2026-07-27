@@ -19,14 +19,7 @@ const TrendingHashtags = ({ onTagClick }) => {
             setTrendingTags(response.data || []);
         } catch (error) {
             console.error('Error fetching trending tags:', error);
-            // Fallback mock data for offline mode
-            setTrendingTags([
-                { tag: 'kiit', count: 42 },
-                { tag: 'placements', count: 38 },
-                { tag: 'exams', count: 25 },
-                { tag: 'campus', count: 18 },
-                { tag: 'coding', count: 15 }
-            ]);
+            setTrendingTags([]);
         } finally {
             setLoading(false);
         }
@@ -66,7 +59,7 @@ const TrendingHashtags = ({ onTagClick }) => {
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
                 <h3 className="text-white font-bold">Trending Now</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-[400px] overflow-y-auto no-scrollbar">
                 {displayTags.map((item, index) => (
                     <button
                         key={item.tag}

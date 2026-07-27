@@ -9,6 +9,7 @@ import postRoutes from './routes/posts.js';
 import userRoutes from './routes/users.js';
 import adminRoutes from './routes/admin.js';
 import wordleRoutes from './routes/wordle.js';
+import quizRoutes from './routes/quizRoutes.js';
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/wordle', wordleRoutes);
+app.use('/api/quiz', quizRoutes);
 
 
 // Health Check

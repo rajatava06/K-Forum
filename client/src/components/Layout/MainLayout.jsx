@@ -20,9 +20,9 @@ const MainLayout = ({ children }) => {
             {/* Main Content Area */}
             <main className={`
                 relative z-10 
-                pt-[120px] md:pt-8 
+                pt-[72px] md:pt-8 
                 px-4 md:px-8 
-                pb-24 md:pb-8
+                pb-20 md:pb-0
                 min-h-screen
                 transition-all duration-300 ease-in-out
                 ${isSidebarOpen ? 'md:pl-80' : 'md:pl-32 lg:pl-40'}
