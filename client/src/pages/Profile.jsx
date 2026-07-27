@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 
 const Profile = () => {
   const { id: urlId } = useParams();
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -90,6 +90,7 @@ const Profile = () => {
         }
       );
       setProfile({ ...profile, ...response.data });
+      if (response.data.avatar) updateUser({ avatar: response.data.avatar });
       toast.success('Profile picture updated successfully');
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -102,6 +103,13 @@ const Profile = () => {
     try {
       const response = await axios.put(`/api/users/profile`, editData);
       setProfile({ ...profile, ...response.data });
+      // Also update AuthContext so sidebar hover popup reflects new name/studentId
+      updateUser({
+        name: response.data.name,
+        studentId: response.data.studentId,
+        year: response.data.year,
+        branch: response.data.branch
+      });
       setEditMode(false);
       toast.success('Profile updated successfully! 🎉');
     } catch (error) {

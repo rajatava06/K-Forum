@@ -189,6 +189,26 @@ router.get('/', optionalAuth, async (req, res) => {
           userReaction = userReact?.type || null;
         }
 
+        // Check if user has voted on the poll (for random sort path)
+        let userPollVote = null;
+        let hasVoted = false;
+        if (post.postType === 'polling' || post.postType === 'qna') {
+          const votedIndices = [];
+          (post.pollOptions || []).forEach((opt, idx) => {
+            const hasVotedThisOpt = req.userId && (opt.votes || []).some(v => v && v.toString() === req.userId.toString());
+            if (hasVotedThisOpt) {
+              votedIndices.push(idx);
+              hasVoted = true;
+            }
+          });
+          if (votedIndices.length > 0) {
+            userPollVote = post.postType === 'polling' ? votedIndices[0] : votedIndices;
+          }
+        }
+
+        const isAuthor = req.userId && post.author && (post.author._id ? post.author._id.toString() : post.author.toString()) === req.userId.toString();
+        const showCorrectAnswers = hasVoted || isAuthor;
+
         return {
           ...post,
           author: post.isAnonymous ? null : {
@@ -203,7 +223,15 @@ router.get('/', optionalAuth, async (req, res) => {
           downvoteCount: post.downvotes?.length || 0,
           reactionCounts,
           totalReactions: (post.reactions || []).length,
-          userReaction
+          userReaction,
+          // Q&A / Polling additions
+          pollOptions: (post.pollOptions || []).map(opt => ({
+            _id: opt._id,
+            text: opt.text,
+            voteCount: (opt.votes || []).length
+          })),
+          correctAnswers: (post.postType === 'qna' && !showCorrectAnswers) ? [] : (post.correctAnswers || []),
+          userPollVote
         };
       });
 

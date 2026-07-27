@@ -87,13 +87,20 @@ api.interceptors.response.use(
                     return { data: [], status: 200 };
                 }
 
+                // --- POLL VOTE & AUTHENTICATED WRITES --- //
+                // These must NEVER fall back to mock — reject immediately
+                if (url.includes('/poll-vote') || url.includes('/react') || url.includes('/upvote') || url.includes('/downvote') || url.includes('/connect') || url.includes('/chat')) {
+                    return Promise.reject(error);
+                }
+
                 // --- POSTS --- //
                 if (url.includes('/posts')) {
                     if (method === 'get') {
                         // Check if it's a specific post ID
                         const postIdMatch = url.match(/\/posts\/([a-zA-Z0-9_-]+)/);
                         if (postIdMatch && !url.includes('/comments')) {
-                            // Mock single post fetch if needed (optional)
+                            // Single post fetch — reject so PostDetail shows real error
+                            return Promise.reject(error);
                         }
 
                         const result = await mockApi.getPosts();
@@ -129,6 +136,7 @@ api.interceptors.response.use(
                         */
                     }
                 } // Close if (url.includes('/posts'))
+
 
             } catch (mockError) {
                 return Promise.reject(mockError);

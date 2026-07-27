@@ -96,7 +96,7 @@ const Chat = () => {
     );
 
     return (
-        <div className="h-[calc(100vh-100px)] flex gap-6 max-w-7xl mx-auto p-4">
+        <div className="flex gap-4 max-w-7xl mx-auto" style={{ height: 'calc(100dvh - 140px)' }}>
             {/* Conversations List */}
             <div className={`w-full md:w-1/3 glass-panel rounded-3xl overflow-hidden flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-white/10">
