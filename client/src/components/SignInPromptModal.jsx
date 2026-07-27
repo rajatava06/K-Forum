@@ -50,8 +50,8 @@ const SignInPromptModal = () => {
 
         {/* Top Glow Icon */}
         <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-lg shadow-emerald-500/30 mb-5">
-          <div className="w-full h-full bg-gray-950 rounded-[14px] flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-emerald-400 animate-pulse" />
+          <div className="w-full h-full bg-gray-950 rounded-[14px] flex items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="K-Forum Logo" className="w-10 h-10 object-contain" />
           </div>
         </div>
 

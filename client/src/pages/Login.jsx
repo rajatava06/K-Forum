@@ -195,49 +195,7 @@ const Login = () => {
                   {loading ? 'Signing In...' : 'Sign In'}
                 </button>
 
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-600"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-[#1a1f2e] text-gray-400">Or continue with</span>
-                  </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setLoading(true);
-                    try {
-                      const demoCredentials = {
-                        email: 'dummy@kiit.ac.in',
-                        password: 'dummy123'
-                      };
-
-                      const response = await axios.post('/api/auth/login', demoCredentials);
-
-                      if (response.data.requiresVerification) {
-                        setUserId(response.data.userId);
-                        setStep('otp');
-                        toast.success(response.data.message || 'Please verify your email.');
-                      } else {
-                        login(response.data.user, response.data.token);
-                        toast.success(`Welcome Demo User!`);
-                        navigate('/');
-                      }
-                    } catch (error) {
-                      console.error('Demo Login Error:', error);
-                      toast.error('Failed to login as demo user');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading}
-                  className="w-full bg-gray-700 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <Shield className="w-5 h-5" />
-                  Demo User Login
-                </button>
 
 
               </form>

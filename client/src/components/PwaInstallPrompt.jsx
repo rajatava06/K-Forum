@@ -68,7 +68,7 @@ const PwaInstallPrompt = () => {
           </div>
           <div className="min-w-0">
             <h4 className="text-white font-bold text-sm truncate">Install K-Forum App</h4>
-            <p className="text-xs text-gray-400 truncate">Add to home screen for fast access</p>
+            <p className="text-[10px] sm:text-xs text-gray-400 whitespace-nowrap">For Fast Access To The Community</p>
           </div>
         </div>
 
