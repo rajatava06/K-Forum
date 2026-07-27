@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import MobileHeader from './MobileHeader';
+import SignInPromptModal from '../SignInPromptModal';
+import PwaInstallPrompt from '../PwaInstallPrompt';
 
 const MainLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -20,6 +22,10 @@ const MainLayout = ({ children }) => {
             {/* Navigation */}
             <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
             <MobileHeader />
+
+            {/* Global Prompts */}
+            <SignInPromptModal />
+            <PwaInstallPrompt />
 
             {/* Main Content Area */}
             <main className={`

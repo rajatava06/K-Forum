@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../services/axiosSetup';
 import PostCard from '../components/Posts/PostCard';
-import { User, Mail, GraduationCap, Calendar, Trophy, MessageCircle, ThumbsUp, Edit3, Camera, Flame, Target, Gamepad2, LogOut } from 'lucide-react';
+import { User, Mail, GraduationCap, Calendar, Trophy, MessageCircle, ThumbsUp, Edit3, Camera, Flame, Target, Gamepad2, LogOut, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
@@ -145,8 +145,17 @@ const Profile = () => {
   const wordleStreak = profile.wordleStreak || { current: 0, max: 0, totalWins: 0 };
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-4 sm:py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-gray-300 hover:text-white border border-white/10 text-sm font-semibold transition-all shadow-md"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#17d059]" />
+            <span>Back</span>
+          </button>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
