@@ -36,7 +36,7 @@ const MobileHeader = () => {
     return (
         <>
             {/* Top Bar */}
-            <div className="md:hidden fixed top-3 left-3 right-3 z-[60] glass-panel border border-white/10 rounded-2xl px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-lg shadow-black/35">
+            <div className="md:hidden fixed top-3 left-3 right-3 z-[60] bg-gradient-to-r from-emerald-500/20 via-[#0f1115]/90 to-[#0f1115]/95 border border-emerald-500/30 rounded-2xl px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-lg shadow-black/35">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 shrink-0 bg-white/5 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20 shadow-[0_0_8px_rgba(255,255,255,0.1)] overflow-hidden">
                         <img src="/logo.png" alt="K-Forum Logo" className="w-full h-full object-cover" />
