@@ -827,7 +827,10 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    if (post.postType !== 'polling' && post.postType !== 'qna') {
+    // Support both postType field (new) and category field (backward compat for old posts)
+    const isValidPollPost = ['polling', 'qna'].includes(post.postType) || 
+                            ['polling', 'qna'].includes(post.category);
+    if (!isValidPollPost) {
       return res.status(400).json({ message: 'This post is not a poll or Q&A' });
     }
 
@@ -844,8 +847,10 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
       return res.status(400).json({ message: 'You have already voted on this poll' });
     }
 
-    // For single-choice polling, only allow 1 option
-    if (post.postType === 'polling' && optionIndices.length > 1) {
+    // For single-choice polling, only allow 1 option (check both postType and category)
+    const isPollingType = post.postType === 'polling' || 
+                          (post.postType === 'normal' && post.category === 'polling');
+    if (isPollingType && optionIndices.length > 1) {
       return res.status(400).json({ message: 'Only one choice is allowed for this poll' });
     }
 
@@ -871,7 +876,7 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
       message: 'Vote submitted successfully!',
       pollOptions,
       correctAnswers: post.correctAnswers || [],
-      userPollVote: post.postType === 'polling' ? optionIndices[0] : optionIndices
+      userPollVote: isPollingType ? optionIndices[0] : optionIndices
     });
   } catch (error) {
     console.error('Poll vote error:', error);

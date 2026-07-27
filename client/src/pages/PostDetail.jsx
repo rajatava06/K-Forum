@@ -102,7 +102,7 @@ const PostDetail = () => {
   };
 
   const handleDeletePost = async () => {
-    if (!user || (user._id !== post.author._id && !user.isAdmin)) {
+    if (!user || (user._id !== post.author._id && user.role !== 'admin')) {
       toast.error('You do not have permission to delete this post');
       return;
     }
@@ -423,7 +423,7 @@ const PostDetail = () => {
                         <Flag className="w-4 h-4" />
                         <span>Report Post</span>
                       </button>
-                      {user && post.author && (user._id === post.author._id || user.isAdmin) && (
+                      {user && post.author && (user._id === post.author._id || user.role === 'admin') && (
                         <button
                           onClick={handleDeletePost}
                           className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 flex items-center space-x-2 rounded-b-lg"
@@ -579,7 +579,6 @@ const PostDetail = () => {
             <span>{post.viewCount || 0}</span>
           </div>
         </div>
-      </div >
 
       {/* Add Comment */}
       {
@@ -738,7 +737,7 @@ const PostDetail = () => {
                         <Flag className="w-4 h-4" />
                         <span>Report Comment</span>
                       </button>
-                      {user && (user._id === (comment.author?._id) || user.isAdmin) && (
+                      {user && (user._id === (comment.author?._id) || user.role === 'admin') && (
                         <button
                           onClick={() => handleDeleteComment(comment._id)}
                           className="w-full px-4 py-2 text-left text-red-400 hover:bg-white/5 flex items-center space-x-2"
@@ -756,15 +755,16 @@ const PostDetail = () => {
         )}
       </div>
 
-      {/* Image Viewer — works for both post and comment images */}
-      {showImageViewer && (
-        <ImageViewer
-          images={viewerImages}
-          initialIndex={selectedImageIndex}
-          onClose={() => setShowImageViewer(false)}
-        />
-      )}
-    </div >
+        {/* Image Viewer — works for both post and comment images */}
+        {showImageViewer && (
+          <ImageViewer
+            images={viewerImages}
+            initialIndex={selectedImageIndex}
+            onClose={() => setShowImageViewer(false)}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

@@ -141,6 +141,7 @@ router.post('/firebase', async (req, res) => {
         branch: user.branch,
         avatar: user.avatar,
         role: user.role,
+        isAdmin: user.role === 'admin',
         authProvider: user.authProvider,
       }
     });
@@ -244,6 +245,7 @@ router.post('/verify-otp', async (req, res) => {
         year: user.year,
         branch: user.branch,
         role: user.role,
+        isAdmin: user.role === 'admin',
         reputation: user.reputation
       }
     });
@@ -306,6 +308,7 @@ router.post('/login', async (req, res) => {
         year: user.year,
         branch: user.branch,
         role: user.role,
+        isAdmin: user.role === 'admin',
         reputation: user.reputation
       }
     });
@@ -326,7 +329,8 @@ router.get('/me', auth, async (req, res) => {
     // Return user with id field for frontend consistency
     res.json({
       ...user.toObject(),
-      id: user._id
+      id: user._id,
+      isAdmin: user.role === 'admin'
     });
   } catch (error) {
     console.error('Get user error:', error);
