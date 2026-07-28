@@ -116,37 +116,45 @@ const BuddyConnectPage = () => {
                         </div>
                     ) : (
                         requests.map(requester => (
-                            <div key={requester._id} className="glass-panel rounded-2xl p-4 flex items-center gap-4">
-                                <img
-                                    src={requester.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(requester.name)}&background=10b981&color=fff`}
-                                    alt={requester.name}
-                                    className="w-14 h-14 rounded-full object-cover border-2 border-emerald-500/30 shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-white truncate">{requester.name}</h3>
-                                    <p className="text-xs text-gray-400">
-                                        {requester.branch || 'Student'} • Year {requester.year || '?'}
-                                    </p>
-                                    {requester.requestedAt && (
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            {new Date(requester.requestedAt).toLocaleDateString()}
+                            <div key={requester._id} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 hover:bg-white/[0.07] group">
+                                <div className="flex items-center gap-3.5 min-w-0">
+                                    <img
+                                        onClick={() => navigate(`/user/${requester._id}`)}
+                                        src={requester.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(requester.name)}&background=10b981&color=fff`}
+                                        alt={requester.name}
+                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-emerald-500/30 shrink-0 cursor-pointer hover:scale-105 hover:border-emerald-400 transition-all shadow-md shadow-black/20"
+                                    />
+                                    <div className="min-w-0">
+                                        <h3 
+                                            onClick={() => navigate(`/user/${requester._id}`)}
+                                            className="font-bold text-white truncate cursor-pointer hover:text-emerald-400 transition-colors text-base sm:text-lg block"
+                                        >
+                                            {requester.name}
+                                        </h3>
+                                        <p className="text-xs text-gray-400">
+                                            {requester.branch || 'Student'} • Year {requester.year || '?'}
                                         </p>
-                                    )}
+                                        {requester.requestedAt && (
+                                            <p className="text-[10px] text-gray-500 bg-white/5 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 mt-1 border border-white/5 font-medium">
+                                                Requested: {new Date(requester.requestedAt).toLocaleDateString()}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex gap-2 shrink-0">
+                                <div className="flex gap-2 w-full sm:w-auto shrink-0">
                                     <button
                                         onClick={() => handleAccept(requester._id)}
-                                        className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-4 py-2 rounded-xl font-semibold transition-all"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs sm:text-sm px-4 py-2.5 rounded-xl font-bold transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] active:scale-95"
                                     >
                                         <CheckCircle2 className="w-4 h-4" />
-                                        Accept
+                                        <span>Accept</span>
                                     </button>
                                     <button
                                         onClick={() => handleReject(requester._id)}
-                                        className="flex items-center gap-1.5 bg-white/5 hover:bg-red-500/20 text-gray-300 hover:text-red-400 text-sm px-4 py-2 rounded-xl font-semibold transition-all"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/20 text-xs sm:text-sm px-4 py-2.5 rounded-xl font-bold transition-all active:scale-95"
                                     >
                                         <XCircle className="w-4 h-4" />
-                                        Decline
+                                        <span>Decline</span>
                                     </button>
                                 </div>
                             </div>
@@ -178,28 +186,36 @@ const BuddyConnectPage = () => {
                         </div>
                     ) : (
                         connections.map(buddy => (
-                            <div key={buddy._id} className="glass-panel rounded-2xl p-4 flex items-center gap-4">
-                                <img
-                                    src={buddy.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(buddy.name)}&background=10b981&color=fff`}
-                                    alt={buddy.name}
-                                    className="w-14 h-14 rounded-full object-cover border-2 border-emerald-500/30 shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-white truncate">{buddy.name}</h3>
-                                    <p className="text-xs text-gray-400">
-                                        {buddy.branch || 'Student'} • Year {buddy.year || '?'}
-                                    </p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                                        <span className="text-xs text-emerald-400">Connected</span>
+                            <div key={buddy._id} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 hover:bg-white/[0.07]">
+                                <div className="flex items-center gap-3.5 min-w-0">
+                                    <img
+                                        onClick={() => navigate(`/user/${buddy._id}`)}
+                                        src={buddy.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(buddy.name)}&background=10b981&color=fff`}
+                                        alt={buddy.name}
+                                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-emerald-500/30 shrink-0 cursor-pointer hover:scale-105 hover:border-emerald-400 transition-all shadow-md shadow-black/20"
+                                    />
+                                    <div className="min-w-0">
+                                        <h3 
+                                            onClick={() => navigate(`/user/${buddy._id}`)}
+                                            className="font-bold text-white truncate cursor-pointer hover:text-emerald-400 transition-colors text-base sm:text-lg block"
+                                        >
+                                            {buddy.name}
+                                        </h3>
+                                        <p className="text-xs text-gray-400">
+                                            {buddy.branch || 'Student'} • Year {buddy.year || '?'}
+                                        </p>
+                                        <div className="flex items-center gap-1.5 mt-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                                            <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Connected</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => navigate('/messages')}
-                                    className="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 text-sm px-4 py-2 rounded-xl font-semibold transition-all"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs sm:text-sm px-4 py-2.5 rounded-xl font-bold transition-all active:scale-95"
                                 >
                                     <MessageCircle className="w-4 h-4" />
-                                    Chat
+                                    <span>Chat</span>
                                 </button>
                             </div>
                         ))

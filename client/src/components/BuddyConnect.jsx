@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from '../services/axiosSetup';
 import { UserPlus, UserCheck, Users, MessageCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const BuddyConnect = () => {
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sentRequests, setSentRequests] = useState([]);
@@ -115,11 +117,11 @@ const BuddyConnect = () => {
           {suggestions.map(user => (
             <div key={user._id} className="flex items-center relative group min-h-[44px] hover:bg-white/5 p-2 rounded-lg transition-all">
               <div className="flex items-center gap-3 pr-12 flex-1">
-                <div className="relative shrink-0">
+                <div className="relative shrink-0 cursor-pointer" onClick={() => navigate(`/user/${user._id}`)}>
                   <img
                     src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`}
                     alt={user.name}
-                    className="w-10 h-10 rounded-full border border-gray-700 object-cover"
+                    className="w-10 h-10 rounded-full border border-gray-700 object-cover hover:border-emerald-400 transition-all"
                   />
                   {sentRequests.includes(user._id) && (
                     <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full p-1">
@@ -127,11 +129,16 @@ const BuddyConnect = () => {
                     </div>
                   )}
                 </div>
-                <div className="overflow-hidden cursor-pointer flex-1" onClick={() => openUserDetails(user)}>
-                  <h4 className="text-sm font-bold text-gray-200 truncate w-28 lg:w-full hover:text-emerald-400">
+                <div className="overflow-hidden flex-1 min-w-0">
+                  <h4 
+                    onClick={() => navigate(`/user/${user._id}`)}
+                    className="text-sm font-bold text-gray-200 truncate w-28 lg:w-full hover:text-emerald-400 cursor-pointer transition-colors"
+                  >
                     {user.name}
                   </h4>
-                  <p className="text-xs text-gray-500 truncate">{getBranchAbbreviation(user.branch)} • {user.year}Y</p>
+                  <p className="text-xs text-gray-500 truncate cursor-pointer hover:text-gray-300 transition-colors" onClick={() => openUserDetails(user)}>
+                    {getBranchAbbreviation(user.branch)} • {user.year}Y
+                  </p>
                 </div>
               </div>
               <button
