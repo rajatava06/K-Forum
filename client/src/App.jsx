@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
@@ -21,6 +21,7 @@ import CalendarPage from './pages/CalendarPage';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import ScrollToTop from './components/ScrollToTop';
 import SplashScreen from './components/SplashScreen';
+import { autoClearCache } from './utils/cacheCleaner';
 
 // Separate component to use Router context if needed
 const MainContainer = () => {
@@ -101,6 +102,10 @@ const MainContainer = () => {
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  useEffect(() => {
+    autoClearCache();
+  }, []);
 
   return (
     <AuthProvider>

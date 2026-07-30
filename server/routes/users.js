@@ -98,14 +98,19 @@ router.get('/requests', auth, async (req, res) => {
       select: 'name avatar studentId branch year'
     });
 
-    // Filter out only pending requests
-    const pendingRequests = user.connectionRequests
-      .filter(req => req.status === 'pending')
-      .map(req => ({
-        ...req.user.toObject(),
-        requestId: req._id,
-        requestedAt: req.createdAt
-      }));
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Filter out only valid pending requests where user object exists
+    const pendingRequests = (user.connectionRequests || [])
+      .filter(reqItem => reqItem.status === 'pending' && reqItem.user)
+      .map(reqItem => {
+        const userObj = typeof reqItem.user.toObject === 'function' ? reqItem.user.toObject() : reqItem.user;
+        return {
+          ...userObj,
+          requestId: reqItem._id,
+          requestedAt: reqItem.createdAt
+        };
+      });
 
     res.json(pendingRequests);
   } catch (error) {
@@ -118,7 +123,7 @@ router.get('/requests', auth, async (req, res) => {
 router.post('/connect/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
-    if (userId === req.userId.toString()) {
+    if (userId.toString() === req.userId.toString()) {
       return res.status(400).json({ message: 'Cannot connect with yourself' });
     }
 
@@ -127,22 +132,33 @@ router.post('/connect/:userId', auth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if already requested or connected
-    const existingRequest = targetUser.connectionRequests.find(
-      r => r.user.toString() === req.userId && r.status === 'pending'
+    const isConnected = targetUser.connections?.some(
+      cId => cId.toString() === req.userId.toString()
     );
-    const isConnected = targetUser.connections.includes(req.userId);
-
-    if (existingRequest || isConnected) {
-      return res.status(400).json({ message: 'Request already sent or connected' });
+    if (isConnected) {
+      return res.status(400).json({ message: 'Already connected' });
     }
 
-    // Add request to target user
-    targetUser.connectionRequests.push({
-      user: req.userId,
-      status: 'pending',
-      createdAt: new Date()
-    });
+    const existingIndex = targetUser.connectionRequests.findIndex(
+      r => r.user?.toString() === req.userId.toString()
+    );
+
+    if (existingIndex !== -1) {
+      if (targetUser.connectionRequests[existingIndex].status === 'pending') {
+        return res.status(400).json({ message: 'Request already sent' });
+      }
+      // Re-activate request if previously rejected or updated
+      targetUser.connectionRequests[existingIndex].status = 'pending';
+      targetUser.connectionRequests[existingIndex].createdAt = new Date();
+    } else {
+      // Add new request to target user
+      targetUser.connectionRequests.push({
+        user: req.userId,
+        status: 'pending',
+        createdAt: new Date()
+      });
+    }
+
     await targetUser.save();
 
     // Send email notification to target user
