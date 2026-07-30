@@ -1,16 +1,44 @@
 [
   {
     "id": 1,
-    "name": "Rajatava Das",
-    "designation": "Lead Developer & Full Stack Architect",
+    "name": "Ritam Vaskar",
+    "designation": "Lead and Developer",
     "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
-    "github": "https://github.com/rajatavadas"
+    "github": "https://github.com/Ritam-Vaskar/"
   },
   {
     "id": 2,
-    "name": "K-Forum Contributor",
-    "designation": "Frontend & UI/UX Specialist",
+    "name": "Rajatava Das",
+    "designation": "Co-Lead and Developer",
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-    "github": "https://github.com/K-Forum"
+    "github": "https://github.com/rajatava06"
+  },
+  {
+    "id": 3,
+    "name": "Satyam Kumar",
+    "designation": "Frontend Developer",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/satyamkumar25923-gif"
+  },
+  {
+    "id": 4,
+    "name": "Ikshan Raj",
+    "designation": "Frontend Developer",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/raj1246"
+  },
+  {
+    "id": 5,
+    "name": "Parth Kumar",
+    "designation": "Frontend Developer",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/Parth2505034"
+  },
+  {
+    "id": 6,
+    "name": "Simran Samantra",
+    "designation": "Full-Stack Developer",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/Simran-persian"
   }
 ]
