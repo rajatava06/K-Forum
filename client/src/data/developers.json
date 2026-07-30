@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Rajatava Das",
+    "designation": "Lead Developer & Full Stack Architect",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/rajatavadas"
+  },
+  {
+    "id": 2,
+    "name": "K-Forum Contributor",
+    "designation": "Frontend & UI/UX Specialist",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+    "github": "https://github.com/K-Forum"
+  }
+]
