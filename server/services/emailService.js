@@ -29,7 +29,7 @@ const emailService = {
       }
 
       const response = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.online',
+        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.me',
         to: recipientEmail,
         subject: `${senderName} sent you a Buddy Connect request! `,
         html: `
@@ -49,7 +49,7 @@ const emailService = {
                 </p>
               </div>
               <p style="text-align: center; margin-top: 30px;">
-                <a href="${process.env.CLIENT_URL || 'https://k-forum-tau.vercel.app'}/buddy-connect" 
+                <a href="${process.env.CLIENT_URL || 'https://kforum.me'}/buddy-connect" 
                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
                   View Request
                 </a>
@@ -89,7 +89,7 @@ const emailService = {
       }
 
       const response = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.online',
+        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.me',
         to: recipientEmail,
         subject: `${acceptorName} accepted your Buddy Connect request! 🎊`,
         html: `
@@ -109,7 +109,7 @@ const emailService = {
                 </p>
               </div>
               <p style="text-align: center; margin-top: 30px;">
-                <a href="${process.env.CLIENT_URL || 'https://k-forum-tau.vercel.app'}/buddy-connect" 
+                <a href="${process.env.CLIENT_URL || 'https://kforum.me'}/buddy-connect" 
                    style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
                   Go to Chat
                 </a>
@@ -149,7 +149,7 @@ const emailService = {
       }
 
       const response = await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.online',
+        from: process.env.RESEND_FROM_EMAIL || 'noreply@kforum.me',
         to: recipientEmail,
         subject: 'Buddy Connect Request Response',
         html: `
@@ -169,7 +169,7 @@ const emailService = {
                 </p>
               </div>
               <p style="text-align: center; margin-top: 30px;">
-                <a href="${process.env.CLIENT_URL || 'https://k-forum-tau.vercel.app'}/buddy-connect" 
+                <a href="${process.env.CLIENT_URL || 'https://kforum.me'}/buddy-connect" 
                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
                   Find More Buddies
                 </a>

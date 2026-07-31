@@ -177,7 +177,7 @@ router.post('/connect/:userId', auth, async (req, res) => {
       targetUser.email, 
       targetUser.name, 
       sender?.name || 'Unknown User',
-      sender?.email || 'noreply@kforum.online'
+      sender?.email || 'noreply@kforum.me'
     ).catch(err => console.error('Failed to send connect email:', err));
 
     console.log('Connection request sent to:', targetUser.email);
