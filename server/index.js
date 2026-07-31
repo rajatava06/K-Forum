@@ -23,6 +23,8 @@ const server = createServer(app);
 // Allowed origins configuration
 const allowedOrigins = [
   "http://localhost:5173",
+  "https://kforum.me",
+  "https://www.kforum.me",
   "https://k-forum-tau.vercel.app",
   "https://www.kforum.online",
   "https://kforum.online",
