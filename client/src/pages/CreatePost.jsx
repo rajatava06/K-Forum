@@ -364,7 +364,7 @@ const CreatePost = () => {
             {/* Tags */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-300 uppercase tracking-wider ml-1">
-                Tags (Optional)
+                #TAGS (OPTIONAL)
               </label>
               <div className="relative group">
                 <Tag className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-emerald-500 transition-colors w-5 h-5" />
@@ -380,19 +380,19 @@ const CreatePost = () => {
             </div>
 
             {/* Anonymous Toggle */}
-            <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-300 gap-4 ${formData.isAnonymous
+            <div className={`flex flex-row items-center justify-between p-4 sm:p-6 rounded-2xl border transition-all duration-300 gap-4 ${formData.isAnonymous
               ? 'bg-emerald-900/10 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.05)]'
               : 'bg-white/5 border-white/5'
               }`}>
-              <div className="flex items-center space-x-4">
-                <div className={`p-3 rounded-xl ${formData.isAnonymous ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>
+              <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                <div className={`p-3 rounded-xl shrink-0 ${formData.isAnonymous ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'}`}>
                   {formData.isAnonymous ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
                 </div>
-                <div>
-                  <h3 className={`font-bold text-lg ${formData.isAnonymous ? 'text-emerald-400' : 'text-gray-200'}`}>
+                <div className="min-w-0 flex-1">
+                  <h3 className={`font-bold text-base sm:text-lg ${formData.isAnonymous ? 'text-emerald-400' : 'text-gray-200'}`}>
                     {formData.isAnonymous ? 'Anonymous Mode' : 'Public Post'}
                   </h3>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-500 text-xs sm:text-sm leading-snug">
                     {formData.isAnonymous
                       ? 'Your identity will be completely hidden.'
                       : 'Your name and profile will be visible.'
@@ -400,7 +400,7 @@ const CreatePost = () => {
                   </p>
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
                 <input
                   type="checkbox"
                   name="isAnonymous"
@@ -408,7 +408,7 @@ const CreatePost = () => {
                   onChange={handleChange}
                   className="sr-only peer"
                 />
-                <div className="w-14 h-8 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500 border border-gray-600"></div>
+                <div className="w-12 sm:w-14 h-7 sm:h-8 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] sm:after:top-[4px] after:left-[3px] sm:after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 sm:after:h-6 after:w-5 sm:after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-teal-500 border border-gray-600"></div>
               </label>
             </div>
 
@@ -464,25 +464,26 @@ const CreatePost = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex items-center justify-between pt-8 border-t border-gray-700/30">
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="px-8 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold"
-              >
-                Cancel
-              </button>
+            {/* Action Buttons: Publish Post first, Cancel second, in separate rows with reduced width */}
+            <div className="flex flex-col items-center gap-3 pt-8 border-t border-gray-700/30">
               <button
                 type="submit"
                 disabled={loading || !formData.title || (!['qna', 'polling'].includes(formData.category) && !formData.content) || !formData.category}
-                className="w-full sm:w-auto relative overflow-hidden bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 sm:px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
+                className="w-full max-w-xs relative overflow-hidden bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-6 py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed group"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {loading ? 'Publishing...' : 'Publish Post'}
                   {!loading && <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="w-full max-w-xs py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-sm text-center"
+              >
+                Cancel
               </button>
             </div>
           </form>
