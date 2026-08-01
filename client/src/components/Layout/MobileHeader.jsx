@@ -21,7 +21,7 @@ const MobileHeader = () => {
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
-            
+
             if (currentScrollY > 30 && currentScrollY > lastScrollY) {
                 // Scrolling down -> hide navbar
                 setIsVisible(false);
@@ -29,7 +29,7 @@ const MobileHeader = () => {
                 // Scrolling up or at top -> show navbar
                 setIsVisible(true);
             }
-            
+
             setLastScrollY(currentScrollY);
         };
 
@@ -59,10 +59,9 @@ const MobileHeader = () => {
     return (
         <>
             {/* Top Bar (Navbar glow restored, hides on scroll down, shows on scroll up) */}
-            <div 
-                className={`md:hidden fixed top-3 left-3 right-3 z-[60] bg-gradient-to-r from-emerald-500/20 via-[#0f1115]/90 to-[#0f1115]/95 border border-emerald-500/30 rounded-2xl px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-lg shadow-black/35 transition-transform duration-300 ease-in-out ${
-                    (isVisible || isOpen) ? 'translate-y-0' : '-translate-y-24'
-                }`}
+            <div
+                className={`md:hidden fixed top-3 left-3 right-3 z-[60] bg-gradient-to-r from-emerald-500/20 via-[#0f1115]/90 to-[#0f1115]/95 border border-emerald-500/30 rounded-2xl px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-lg shadow-black/35 transition-transform duration-300 ease-in-out ${(isVisible || isOpen) ? 'translate-y-0' : '-translate-y-24'
+                    }`}
             >
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 shrink-0 bg-white/5 rounded-lg flex items-center justify-center border border-white/10 overflow-hidden">
@@ -85,9 +84,8 @@ const MobileHeader = () => {
 
             {/* Menu Drawer (Solid background with light green ambient glow) */}
             <div
-                className={`md:hidden fixed inset-0 z-[55] bg-[#0f172a] transition-all duration-300 ease-in-out overflow-hidden ${
-                    isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
-                }`}
+                className={`md:hidden fixed inset-0 z-[55] bg-[#0f172a] transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
+                    }`}
             >
                 {/* Light Green Ambient Background Glow */}
                 <div className="absolute top-10 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
@@ -138,7 +136,7 @@ const MobileHeader = () => {
                     {/* Trending Section */}
                     <div className="mt-2 pt-6 border-t border-white/10 relative">
                         <TrendingHashtags onTagClick={handleTagClick} />
-                        
+
                         {/* Meet the Developers Button (No background glow tint, clean neutral style) */}
                         <div className="mt-4 pt-2">
                             <button
@@ -162,9 +160,9 @@ const MobileHeader = () => {
             </div>
 
             {/* Meet the Developers Modal */}
-            <DevelopersModal 
-                isOpen={isDevModalOpen} 
-                onClose={() => setIsDevModalOpen(false)} 
+            <DevelopersModal
+                isOpen={isDevModalOpen}
+                onClose={() => setIsDevModalOpen(false)}
             />
         </>
     );
