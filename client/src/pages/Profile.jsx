@@ -360,7 +360,7 @@ const Profile = () => {
 
                   {wordleStreak.current === 0 && wordleStreak.max > 0 && (
                     <p className="mt-2 text-center text-gray-500 text-sm">
-                      Streak broken! Start a new one today.
+                      Streak Broken! Start a new one today.
                     </p>
                   )}
                 </div>
@@ -449,7 +449,7 @@ const Profile = () => {
             {posts.length === 0 ? (
               <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 text-center border border-white/10">
                 <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No posts yet</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">No Posts Yet</h3>
                 <p className="text-gray-400">
                   {isOwnProfile ? "You haven't created any posts yet." : "This user hasn't created any public posts yet."}
                 </p>

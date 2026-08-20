@@ -49,7 +49,7 @@ const CreatePost = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + selectedImages.length > 5) {
-      toast.error('Maximum 5 images allowed');
+      toast.error('Maximum 5 Images Allowed');
       return;
     }
 
@@ -111,7 +111,7 @@ const CreatePost = () => {
           throw new Error('Please provide at least 2 options.');
         }
         formDataToSend.append('pollOptions', JSON.stringify(cleanOptions));
-        
+
         if (formData.category === 'qna') {
           if (correctAnswers.length === 0) {
             throw new Error('Please select at least one correct answer for Q&A.');
@@ -134,7 +134,7 @@ const CreatePost = () => {
         toast.success('Your post has been submitted for review. It will be visible once approved by an admin.');
         navigate('/');
       } else {
-        toast.success('Post created successfully!');
+        toast.success('Post Created Successfully!');
         navigate(`/post/${response.data.post._id}`);
       }
     } catch (error) {
@@ -170,7 +170,7 @@ const CreatePost = () => {
             <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4 animate-float">
               Create New Post
             </h1>
-            <p className="text-gray-400 text-lg">Share your thoughts with the K-Forum community</p>
+            <p className="text-gray-400 text-lg">Share Your Thoughts With The K-Forum Community</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -328,7 +328,7 @@ const CreatePost = () => {
                     + Add Option
                   </button>
                 )}
-                
+
                 {formData.category === 'qna' && correctAnswers.length === 0 && (
                   <p className="text-xs text-amber-400/80 mt-2">
                     ⚠️ Tip: Mark at least one correct answer using the checkbox.
@@ -422,8 +422,8 @@ const CreatePost = () => {
                   <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <Image className="w-8 h-8 text-gray-400 group-hover:text-emerald-400 transition-colors" />
                   </div>
-                  <span className="text-sm font-medium group-hover:text-emerald-300 transition-colors">Click to upload images</span>
-                  <span className="text-xs text-gray-600 mt-1">JPG, PNG up to 5MB each</span>
+                  <span className="text-sm font-medium group-hover:text-emerald-300 transition-colors">Click To Upload Images</span>
+                  <span className="text-xs text-gray-600 mt-1">JPG or PNG up to 5MB each</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -437,15 +437,15 @@ const CreatePost = () => {
                   <div className={`${selectedImages.length === 1 ? '' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'}`}>
                     {selectedImages.map((image, index) => (
                       <div key={index} className={`relative group overflow-hidden glass-card rounded-2xl ${selectedImages.length === 1
-                          ? 'w-full max-w-2xl mx-auto'
-                          : 'aspect-square'
+                        ? 'w-full max-w-2xl mx-auto'
+                        : 'aspect-square'
                         }`}>
                         <img
                           src={image.url}
                           alt={`Preview ${index + 1}`}
                           className={`w-full object-cover ${selectedImages.length === 1
-                              ? 'h-auto max-h-[500px] object-contain bg-black/5'
-                              : 'h-full'
+                            ? 'h-auto max-h-[500px] object-contain bg-black/5'
+                            : 'h-full'
                             }`}
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

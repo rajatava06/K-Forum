@@ -212,7 +212,7 @@ const Home = () => {
               onChange={(e) => handleSortChange(e.target.value)}
               className="bg-[#0f1115] text-gray-400 text-xs font-bold px-4 py-2 outline-none cursor-pointer hover:text-white transition-colors appearance-none rounded-lg"
             >
-              <option value="createdAt" className="bg-[#1a1d23] text-gray-300">Newest</option>
+              <option value="createdAt" className="bg-[#1a1d23] text-gray-300">Latest</option>
               <option value="random" className="bg-[#1a1d23] text-gray-300">Random</option>
               <option value="upvotes" className="bg-[#1a1d23] text-gray-300">Top</option>
               <option value="commentCount" className="bg-[#1a1d23] text-gray-300">Hot</option>
@@ -364,7 +364,7 @@ const Home = () => {
               <div className="w-24 h-24 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Search className="w-10 h-10 text-gray-600" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">No posts found</h3>
+              <h3 className="text-2xl font-bold text-white mb-2">No Posts Found</h3>
               <p className="text-gray-400">Be the first to share something here.</p>
             </div>
           )}

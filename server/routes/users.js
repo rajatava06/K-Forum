@@ -163,7 +163,7 @@ router.post('/connect/:userId', auth, async (req, res) => {
 
     // Send email notification to target user
     const sender = await User.findById(req.userId).select('name email');
-    
+
     console.log(' DEBUG - Sender:', sender);
     console.log('DEBUG - Sender Name:', sender?.name);
     console.log(' DEBUG - Target User Email:', targetUser.email);
@@ -174,8 +174,8 @@ router.post('/connect/:userId', auth, async (req, res) => {
 
     // Send email
     await emailService.sendConnectionRequestEmail(
-      targetUser.email, 
-      targetUser.name, 
+      targetUser.email,
+      targetUser.name,
       sender?.name || 'Unknown User',
       sender?.email || 'noreply@kforum.me'
     ).catch(err => console.error('Failed to send connect email:', err));
@@ -316,9 +316,9 @@ router.put('/profile', auth, upload.single('avatar'), async (req, res) => {
       const cleanStudentId = studentId.trim();
       // Check if studentId contains spaces or invalid chars if desired, but let's keep it simple
       // Check uniqueness
-      const existingUser = await User.findOne({ 
-        studentId: cleanStudentId, 
-        _id: { $ne: req.userId } 
+      const existingUser = await User.findOne({
+        studentId: cleanStudentId,
+        _id: { $ne: req.userId }
       });
       if (existingUser) {
         return res.status(400).json({ message: 'Username (@) is already taken' });

@@ -6,11 +6,11 @@ const DevelopersModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
-      <div 
+      <div
         className="relative w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
@@ -24,7 +24,7 @@ const DevelopersModal = ({ isOpen, onClose }) => {
               <h2 className="text-xl font-bold text-white">
                 Meet the Developers
               </h2>
-              <p className="text-xs text-gray-400">The minds building K-Forum</p>
+              <p className="text-xs text-gray-400">The Minds Building K-Forum</p>
             </div>
           </div>
           <button

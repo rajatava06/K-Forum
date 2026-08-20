@@ -50,7 +50,7 @@ const UserProfile = () => {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">User not found</div>
+        <div className="text-white text-xl">User Not Found</div>
       </div>
     );
   }

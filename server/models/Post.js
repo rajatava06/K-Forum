@@ -9,7 +9,7 @@ const postSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: function() {
+    required: function () {
       return !['qna', 'polling'].includes(this.category);
     },
     maxlength: 5000

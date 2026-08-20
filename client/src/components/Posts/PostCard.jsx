@@ -253,6 +253,8 @@ const PostCard = ({ post, onDelete }) => {
                 <img
                   src={attachment.url}
                   alt={attachment.filename}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto max-h-[500px] object-contain transition-opacity duration-200 group-hover:opacity-90"
                 />
                 {index === 2 && post.attachments.length > 3 && (

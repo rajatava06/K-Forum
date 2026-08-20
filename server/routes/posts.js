@@ -298,7 +298,7 @@ router.get('/', optionalAuth, async (req, res) => {
         reactionCounts,
         totalReactions: (post.reactions || []).length,
         userReaction,
-        
+
         // Q&A / Polling additions
         pollOptions: (post.pollOptions || []).map(opt => ({
           _id: opt._id,
@@ -378,7 +378,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       reactionCounts,
       totalReactions: (post.reactions || []).length,
       userReaction,
-      
+
       // Q&A / Polling additions
       pollOptions: (post.pollOptions || []).map(opt => ({
         _id: opt._id,
@@ -472,8 +472,8 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     if (category === 'qna' || category === 'polling') {
       try {
         if (pollOptions) {
-          const rawOptions = typeof pollOptions === 'string' 
-            ? JSON.parse(pollOptions) 
+          const rawOptions = typeof pollOptions === 'string'
+            ? JSON.parse(pollOptions)
             : pollOptions;
           parsedPollOptions = rawOptions.map(opt => ({ text: opt.text, votes: [] }));
         }
@@ -828,8 +828,8 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
     }
 
     // Support both postType field (new) and category field (backward compat for old posts)
-    const isValidPollPost = ['polling', 'qna'].includes(post.postType) || 
-                            ['polling', 'qna'].includes(post.category);
+    const isValidPollPost = ['polling', 'qna'].includes(post.postType) ||
+      ['polling', 'qna'].includes(post.category);
     if (!isValidPollPost) {
       return res.status(400).json({ message: 'This post is not a poll or Q&A' });
     }
@@ -848,8 +848,8 @@ router.post('/:id/poll-vote', auth, async (req, res) => {
     }
 
     // For single-choice polling, only allow 1 option (check both postType and category)
-    const isPollingType = post.postType === 'polling' || 
-                          (post.postType === 'normal' && post.category === 'polling');
+    const isPollingType = post.postType === 'polling' ||
+      (post.postType === 'normal' && post.category === 'polling');
     if (isPollingType && optionIndices.length > 1) {
       return res.status(400).json({ message: 'Only one choice is allowed for this poll' });
     }

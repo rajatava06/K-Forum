@@ -131,7 +131,7 @@ const Admin = () => {
             <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
           </div>
           <p className="text-gray-400">
-            Welcome back, {user.name}. Manage the K-Forum community effectively.
+            Welcome Back, {user.name}. Manage the K-Forum Community Effectively.
           </p>
         </div>
 
