@@ -14,15 +14,18 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalPosts = await Post.countDocuments();
     const totalComments = await Comment.countDocuments();
-    const pendingReports = await Post.countDocuments({ 'reports.0': { $exists: true } });
+    const pendingPostReports = await Post.countDocuments({ 'reports.0': { $exists: true } });
+    const pendingCommentReports = await Comment.countDocuments({ 'reports.0': { $exists: true } });
 
-    // NEW: Count pending review posts
-    const pendingReview = await Post.countDocuments({
+    // Pending review posts & comments
+    const pendingPostsCount = await Post.countDocuments({ status: 'PENDING_REVIEW' });
+    const pendingCommentsCount = await Comment.countDocuments({
       $or: [
         { status: 'PENDING_REVIEW' },
-        { 'moderation.isUnsafe': true }
+        { moderationStatus: 'pending' }
       ]
     });
+
     const publishedPosts = await Post.countDocuments({ status: 'PUBLISHED' });
     const rejectedPosts = await Post.countDocuments({ status: 'REJECTED' });
 
@@ -34,8 +37,10 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
       totalUsers,
       totalPosts,
       totalComments,
-      pendingReports,
-      pendingReview,
+      pendingReports: pendingPostReports + pendingCommentReports,
+      pendingReview: pendingPostsCount + pendingCommentsCount,
+      pendingPostsCount,
+      pendingCommentsCount,
       publishedPosts,
       rejectedPosts,
       categoryStats
@@ -52,7 +57,7 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
 router.get('/posts/pending', auth, isAdmin, async (req, res) => {
   try {
     const posts = await Post.find({ status: 'PENDING_REVIEW' })
-      .populate('author', 'name studentId email')
+      .populate('author', 'name studentId email year branch')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -64,7 +69,8 @@ router.get('/posts/pending', auth, isAdmin, async (req, res) => {
         confidencePercent: Math.round((post.moderation?.confidence || 0) * 100),
         categories: post.moderation?.categories || [],
         flaggedWords: post.moderation?.flaggedWords || [],
-        language: post.moderation?.language || 'unknown'
+        language: post.moderation?.language || 'unknown',
+        isUnsafe: post.moderation?.isUnsafe || false
       }
     }));
 
@@ -129,15 +135,119 @@ router.post('/posts/:id/reject', auth, isAdmin, async (req, res) => {
 
     await post.save();
 
-    // Optionally: Send notification to user
-    // await notifyUser(post.author, 'Your post has been rejected');
-
     res.json({
       message: 'Post rejected successfully',
       post
     });
   } catch (error) {
     console.error('Reject post error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// GET PENDING REVIEW COMMENTS (for admin moderation)
+// ============================================
+router.get('/comments/pending', auth, isAdmin, async (req, res) => {
+  try {
+    const comments = await Comment.find({
+      $or: [
+        { status: 'PENDING_REVIEW' },
+        { moderationStatus: 'pending' }
+      ]
+    })
+      .populate('author', 'name studentId email year branch')
+      .populate('post', 'title category _id')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const formattedComments = comments.map(comment => ({
+      ...comment,
+      moderationInfo: {
+        confidence: comment.moderation?.confidence || 0,
+        confidencePercent: Math.round((comment.moderation?.confidence || 0) * 100),
+        categories: comment.moderation?.categories || [],
+        flaggedWords: comment.moderation?.flaggedWords || [],
+        language: comment.moderation?.language || 'unknown',
+        isUnsafe: comment.moderation?.isUnsafe || false
+      }
+    }));
+
+    res.json(formattedComments);
+  } catch (error) {
+    console.error('Get pending comments error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// APPROVE COMMENT (Admin action)
+// ============================================
+router.post('/comments/:id/approve', auth, isAdmin, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const wasNotPublished = comment.status !== 'PUBLISHED' && comment.moderationStatus !== 'approved';
+
+    comment.status = 'PUBLISHED';
+    comment.moderationStatus = 'approved';
+    comment.adminDecision = {
+      decision: 'APPROVED',
+      adminId: req.userId,
+      reviewedAt: new Date(),
+      reason: req.body.reason || 'Approved by admin'
+    };
+
+    await comment.save();
+
+    if (wasNotPublished && comment.post) {
+      await Post.findByIdAndUpdate(comment.post, {
+        $inc: { commentCount: 1 }
+      });
+    }
+
+    res.json({
+      message: 'Comment approved and published successfully',
+      comment
+    });
+  } catch (error) {
+    console.error('Approve comment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// REJECT COMMENT (Admin action)
+// ============================================
+router.post('/comments/:id/reject', auth, isAdmin, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    comment.status = 'REJECTED';
+    comment.moderationStatus = 'removed';
+    comment.adminDecision = {
+      decision: 'REJECTED',
+      adminId: req.userId,
+      reviewedAt: new Date(),
+      reason: req.body.reason || 'Rejected by admin'
+    };
+
+    await comment.save();
+
+    res.json({
+      message: 'Comment rejected successfully',
+      comment
+    });
+  } catch (error) {
+    console.error('Reject comment error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -160,28 +270,36 @@ router.get('/reported-posts', auth, isAdmin, async (req, res) => {
 });
 
 // ============================================
-// GET AI FLAGGED POSTS (only AI moderation flagged, NOT user reports)
+// GET REPORTED COMMENTS (user reports)
+// ============================================
+router.get('/reported-comments', auth, isAdmin, async (req, res) => {
+  try {
+    const comments = await Comment.find({ 'reports.0': { $exists: true } })
+      .populate('author', 'name studentId')
+      .populate('reports.user', 'name studentId')
+      .populate('post', 'title _id')
+      .sort({ 'reports.reportedAt': -1 });
+
+    res.json(comments);
+  } catch (error) {
+    console.error('Get reported comments error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// GET AI FLAGGED POSTS
 // ============================================
 router.get('/flagged-posts', auth, isAdmin, async (req, res) => {
   try {
-    // Only get posts that were flagged by AI moderation, NOT by user reports
     const posts = await Post.find({
       $and: [
-        // Must be flagged by AI or pending review
         {
           $or: [
             { 'moderation.isUnsafe': true },
-            { status: 'PENDING_REVIEW', 'moderation.isUnsafe': true }
+            { moderationStatus: 'flagged' }
           ]
         },
-        // Exclude posts that have user reports (those go to reported-posts)
-        {
-          $or: [
-            { reports: { $exists: false } },
-            { reports: { $size: 0 } }
-          ]
-        },
-        // Not already approved or rejected
         { status: { $ne: 'REJECTED' } }
       ]
     })
@@ -189,7 +307,6 @@ router.get('/flagged-posts', auth, isAdmin, async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Add moderation info for admin UI
     const formattedPosts = posts.map(post => ({
       ...post,
       moderationInfo: {
@@ -219,7 +336,6 @@ router.post('/moderate-post/:id', auth, isAdmin, async (req, res) => {
       moderationStatus: action === 'approve' ? 'approved' : action
     };
 
-    // Map to new status field
     if (action === 'approve') {
       updateData.status = 'PUBLISHED';
       updateData.adminDecision = {

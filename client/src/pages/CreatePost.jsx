@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from '../services/axiosSetup';
 import toast from 'react-hot-toast';
-import { Send, Tag, Eye, EyeOff, Image, X, Calendar } from 'lucide-react';
+import { Send, Tag, Eye, EyeOff, Image, X, Calendar, ShieldCheck, Clock, CheckCircle } from 'lucide-react';
 
 const CreatePost = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +22,7 @@ const CreatePost = () => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -131,10 +132,13 @@ const CreatePost = () => {
 
       // Handle different moderation statuses
       if (response.data.moderationStatus === 'PENDING_REVIEW') {
-        toast.success('Your post has been submitted for review. It will be visible once approved by an admin.');
-        navigate('/');
+        setShowReviewModal(true);
+        toast.success('Post submitted for review! It will be visible once approved.', {
+          duration: 5000,
+          icon: '⏳'
+        });
       } else {
-        toast.success('Post Created Successfully!');
+        toast.success('Post Created and Published Successfully!');
         navigate(`/post/${response.data.post._id}`);
       }
     } catch (error) {
@@ -488,8 +492,42 @@ const CreatePost = () => {
             </div>
           </form>
         </div>
-      </div >
-    </div >
+      </div>
+
+      {/* Review Submission Popup Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="glass-panel max-w-md w-full p-6 sm:p-8 rounded-3xl border border-emerald-500/30 shadow-[0_0_50px_rgba(16,185,129,0.2)] text-center relative overflow-hidden">
+            <div className="w-16 h-16 bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/40 rounded-2xl flex items-center justify-center mx-auto mb-5 text-emerald-400">
+              <ShieldCheck className="w-9 h-9" />
+            </div>
+
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Post Submitted for Review!
+            </h3>
+
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+              Your post has been pre-checked by AI and sent to our admin team for review. It will be published to the community feed as soon as an admin approves it.
+            </p>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 mb-6 text-xs text-gray-400 flex items-center justify-center gap-2">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Reviews are typically processed quickly by admins.</span>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowReviewModal(false);
+                navigate('/');
+              }}
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all"
+            >
+              Got it, go to feed
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

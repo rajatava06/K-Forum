@@ -239,17 +239,29 @@ const PostDetail = () => {
           }
         }
       );
-      setComments([response.data, ...comments]);
+
+      const isPublished = response.data.status === 'PUBLISHED' || response.data.moderationStatus === 'approved';
+
+      if (isPublished) {
+        setComments([response.data.comment || response.data, ...comments]);
+        setPost({
+          ...post,
+          commentCount: (post.commentCount || 0) + 1
+        });
+        toast.success('Comment added successfully!');
+      } else {
+        toast.success('Your comment has been submitted for review. It will appear once approved by an admin.', {
+          duration: 5000,
+          icon: '⏳'
+        });
+      }
+
       setNewComment('');
       setCommentImageFiles([]);
       setCommentImagePreviews([]);
-      setPost({
-        ...post,
-        commentCount: post.commentCount + 1
-      });
-      toast.success('Comment added successfully!');
     } catch (error) {
-      toast.error('Failed to add comment');
+      console.error('Add comment error:', error);
+      toast.error(error.response?.data?.message || 'Failed to add comment');
     } finally {
       setSubmittingComment(false);
     }

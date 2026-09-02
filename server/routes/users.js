@@ -357,21 +357,28 @@ router.get('/:id/posts', async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const posts = await Post.find({
+    const publishedUserFilter = {
       author: req.params.id,
-      moderationStatus: 'approved',
-      isAnonymous: false // Only show non-anonymous posts on profile
-    })
+      isAnonymous: false,
+      $and: [
+        { status: { $nin: ['PENDING_REVIEW', 'REJECTED'] } },
+        { moderationStatus: { $ne: 'removed' } },
+        {
+          $or: [
+            { status: 'PUBLISHED' },
+            { status: { $exists: false }, moderationStatus: 'approved' }
+          ]
+        }
+      ]
+    };
+
+    const posts = await Post.find(publishedUserFilter)
       .populate('author', 'name studentId year branch')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    const total = await Post.countDocuments({
-      author: req.params.id,
-      moderationStatus: 'approved',
-      isAnonymous: false
-    });
+    const total = await Post.countDocuments(publishedUserFilter);
 
     const processedPosts = posts.map(post => ({
       ...post.toObject(),

@@ -164,7 +164,7 @@ const postSchema = new mongoose.Schema({
   moderationStatus: {
     type: String,
     enum: ['pending', 'approved', 'flagged', 'removed'],
-    default: 'approved'
+    default: 'pending'
   },
   postType: {
     type: String,

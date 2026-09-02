@@ -32,15 +32,26 @@ router.get('/trending/hashtags', async (req, res) => {
 
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
+    // Filter strictly for published posts only
+    const publishedFilter = {
+      $and: [
+        { status: { $nin: ['PENDING_REVIEW', 'REJECTED'] } },
+        { moderationStatus: { $ne: 'removed' } },
+        {
+          $or: [
+            { status: 'PUBLISHED' },
+            { status: { $exists: false }, moderationStatus: 'approved' }
+          ]
+        }
+      ]
+    };
+
     // Try recent hashtags first
     let trendingTags = await Post.aggregate([
       {
         $match: {
           createdAt: { $gte: sevenDaysAgo },
-          $or: [
-            { status: 'PUBLISHED' },
-            { status: { $exists: false }, moderationStatus: 'approved' }
-          ]
+          ...publishedFilter
         }
       },
       { $unwind: '$tags' },
@@ -66,10 +77,7 @@ router.get('/trending/hashtags', async (req, res) => {
       trendingTags = await Post.aggregate([
         {
           $match: {
-            $or: [
-              { status: 'PUBLISHED' },
-              { status: { $exists: false }, moderationStatus: 'approved' }
-            ]
+            ...publishedFilter
           }
         },
         { $unwind: '$tags' },
@@ -107,9 +115,15 @@ router.get('/events', async (req, res) => {
     const events = await Post.find({
       category: 'events',
       eventDate: { $gte: today },
-      $or: [
-        { status: 'PUBLISHED' },
-        { status: { $exists: false }, moderationStatus: 'approved' }
+      $and: [
+        { status: { $nin: ['PENDING_REVIEW', 'REJECTED'] } },
+        { moderationStatus: { $ne: 'removed' } },
+        {
+          $or: [
+            { status: 'PUBLISHED' },
+            { status: { $exists: false }, moderationStatus: 'approved' }
+          ]
+        }
       ]
     })
       .select('title eventDate')
@@ -137,12 +151,17 @@ router.get('/', optionalAuth, async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Include both old posts (moderationStatus=approved) and new posts (status=PUBLISHED)
-    // Also catch posts that might have reverted to default status but are approved
+    // Strict filter: only PUBLISHED and approved posts (never PENDING_REVIEW or REJECTED)
     let query = {
-      $or: [
-        { status: 'PUBLISHED' },
-        { moderationStatus: 'approved' }
+      $and: [
+        { status: { $nin: ['PENDING_REVIEW', 'REJECTED'] } },
+        { moderationStatus: { $ne: 'removed' } },
+        {
+          $or: [
+            { status: 'PUBLISHED' },
+            { status: { $exists: false }, moderationStatus: 'approved' }
+          ]
+        }
       ]
     };
 
@@ -332,6 +351,16 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
 
+    // Check visibility permissions:
+    // If post is not published/approved, only the author or an admin can view it
+    const isPublished = post.status === 'PUBLISHED' || (!post.status && post.moderationStatus === 'approved');
+    const isAuthor = req.userId && post.author && (post.author._id ? post.author._id.toString() : post.author.toString()) === req.userId.toString();
+    const isAdminUser = req.userRole === 'admin' || req.userRole === 'moderator';
+
+    if (!isPublished && !isAuthor && !isAdminUser) {
+      return res.status(404).json({ message: 'This post is currently under review or does not exist' });
+    }
+
     // Increment view count without triggering full validation on old documents
     await Post.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
 
@@ -367,7 +396,6 @@ router.get('/:id', optionalAuth, async (req, res) => {
       }
     }
 
-    const isAuthor = req.userId && post.author && (post.author._id ? post.author._id.toString() : post.author.toString()) === req.userId.toString();
     const showCorrectAnswers = hasVoted || isAuthor;
 
     const processedPost = {
@@ -397,7 +425,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
 });
 
 // ============================================
-// CREATE POST - With AI Moderation
+// CREATE POST - With AI Moderation & Admin Review
 // ============================================
 router.post('/', auth, upload.array('images', 5), async (req, res) => {
   try {
@@ -406,10 +434,6 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     console.log('📝 Create Post Request Received');
     console.log('   Content-Type:', req.headers['content-type']);
     console.log('   Files received:', req.files ? req.files.length : 'None');
-    console.log('   Cloudinary Configured:',
-      process.env.CLOUDINARY_CLOUD_NAME ? 'Yes' : 'No',
-      process.env.CLOUDINARY_API_KEY ? 'Yes' : 'No'
-    );
 
     // --- AI MODERATION ---
     const textToAnalyze = `${title}\n${content || ''}`;
@@ -418,10 +442,13 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     const moderationResult = await moderateText(textToAnalyze);
     console.log('Moderation Result:', moderationResult);
 
-    // Determine status based on moderation
-    // SAFE (confidence < 0.45) → PUBLISHED
-    // UNSAFE (confidence >= 0.45) → PENDING_REVIEW (admin will decide)
-    const status = moderationResult.isUnsafe ? 'PENDING_REVIEW' : 'PUBLISHED';
+    const isAdminUser = req.userRole === 'admin' || req.userRole === 'moderator';
+
+    // Admins publish immediately to feed; all non-admins require Admin Approval first
+    const status = isAdminUser ? 'PUBLISHED' : 'PENDING_REVIEW';
+    const moderationStatus = isAdminUser
+      ? 'approved'
+      : (moderationResult.isUnsafe ? 'flagged' : 'pending');
 
     // Extract hashtags from content
     const hashtagRegex = /#(\w+)/g;
@@ -466,8 +493,6 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     const manualTags = tags ? tags.split(',').map(tag => tag.trim().toLowerCase()).filter(Boolean) : [];
     const allTags = [...new Set([...manualTags, ...extractedHashtags])];
 
-    console.log('📎 Attachments to save:', JSON.stringify(cleanAttachments, null, 2));
-
     let parsedPollOptions = [];
     if (category === 'qna' || category === 'polling') {
       try {
@@ -505,19 +530,24 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
       isAnonymous: isAnonymous === 'true',
       attachments: cleanAttachments,
 
-      // New moderation fields
+      // Moderation fields
       status,
       eventDate: category === 'events' ? eventDate : undefined,
       moderation: {
-        isUnsafe: moderationResult.isUnsafe,
-        confidence: moderationResult.confidence,
+        isUnsafe: moderationResult.isUnsafe || false,
+        confidence: moderationResult.confidence || 0,
         categories: moderationResult.categories || [],
         flaggedWords: moderationResult.flaggedWords || [],
         language: moderationResult.language || 'unknown'
       },
+      adminDecision: isAdminUser ? {
+        decision: 'APPROVED',
+        adminId: req.userId,
+        reviewedAt: new Date(),
+        reason: 'Auto-approved for admin'
+      } : undefined,
 
-      // Keep old field for backward compatibility
-      moderationStatus: status === 'PUBLISHED' ? 'approved' : 'flagged',
+      moderationStatus,
 
       // Q&A / Polling fields
       postType: ['qna', 'polling'].includes(category) ? category : 'normal',
@@ -543,7 +573,7 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
     res.status(201).json({
       message: status === 'PUBLISHED'
         ? 'Post published successfully!'
-        : 'Post submitted for admin review. It will be visible once approved.',
+        : 'Your post has been submitted for review. It will be visible in the feed once approved by an admin.',
       post: processedPost,
       moderationStatus: status
     });
@@ -682,7 +712,16 @@ router.get('/:id/comments', async (req, res) => {
   try {
     const comments = await Comment.find({
       post: req.params.id,
-      moderationStatus: 'approved'
+      $and: [
+        { status: { $nin: ['PENDING_REVIEW', 'REJECTED'] } },
+        { moderationStatus: { $ne: 'removed' } },
+        {
+          $or: [
+            { status: 'PUBLISHED' },
+            { status: { $exists: false }, moderationStatus: 'approved' }
+          ]
+        }
+      ]
     })
       .populate('author', 'name studentId year branch avatar')
       .sort({ createdAt: -1 });
@@ -701,10 +740,26 @@ router.get('/:id/comments', async (req, res) => {
   }
 });
 
-// Add comment
+// Add comment - with AI Moderation & Admin Review
 router.post('/:id/comments', auth, upload.array('images', 5), async (req, res) => {
   try {
     const { content, isAnonymous, parentComment } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Comment content cannot be empty' });
+    }
+
+    // --- AI MODERATION FOR COMMENTS ---
+    const moderationResult = await moderateText(content.trim());
+    console.log('Comment Moderation Result:', moderationResult);
+
+    const isAdminUser = req.userRole === 'admin' || req.userRole === 'moderator';
+
+    // Admins publish immediately; non-admins go to PENDING_REVIEW
+    const status = isAdminUser ? 'PUBLISHED' : 'PENDING_REVIEW';
+    const moderationStatus = isAdminUser
+      ? 'approved'
+      : (moderationResult.isUnsafe ? 'flagged' : 'pending');
 
     // Handle image uploads
     const attachments = [];
@@ -725,20 +780,38 @@ router.post('/:id/comments', auth, upload.array('images', 5), async (req, res) =
     }
 
     const comment = new Comment({
-      content,
+      content: content.trim(),
       author: req.userId,
       post: req.params.id,
-      isAnonymous: isAnonymous === 'true', // Handle form-data (strings)
+      isAnonymous: isAnonymous === 'true',
       parentComment: parentComment || null,
-      attachments
+      attachments,
+      status,
+      moderation: {
+        isUnsafe: moderationResult.isUnsafe || false,
+        confidence: moderationResult.confidence || 0,
+        categories: moderationResult.categories || [],
+        flaggedWords: moderationResult.flaggedWords || [],
+        language: moderationResult.language || 'unknown'
+      },
+      adminDecision: isAdminUser ? {
+        decision: 'APPROVED',
+        adminId: req.userId,
+        reviewedAt: new Date(),
+        reason: 'Auto-approved for admin'
+      } : undefined,
+      moderationStatus
     });
 
     await comment.save();
     await comment.populate('author', 'name studentId year branch avatar');
 
-    await Post.findByIdAndUpdate(req.params.id, {
-      $inc: { commentCount: 1 }
-    });
+    // Only increment comment count if published immediately
+    if (status === 'PUBLISHED') {
+      await Post.findByIdAndUpdate(req.params.id, {
+        $inc: { commentCount: 1 }
+      });
+    }
 
     const processedComment = {
       ...comment.toObject(),
@@ -747,7 +820,14 @@ router.post('/:id/comments', auth, upload.array('images', 5), async (req, res) =
       downvoteCount: 0
     };
 
-    res.status(201).json(processedComment);
+    res.status(201).json({
+      message: status === 'PUBLISHED'
+        ? 'Comment added successfully!'
+        : 'Your comment has been submitted for review. It will be visible once approved by an admin.',
+      status,
+      comment: processedComment,
+      moderationStatus
+    });
   } catch (error) {
     console.error('Add comment error:', error);
     if (error instanceof multer.MulterError) {
@@ -756,6 +836,64 @@ router.post('/:id/comments', auth, upload.array('images', 5), async (req, res) =
         error: error.message
       });
     }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete comment
+router.delete('/:id/comments/:commentId', auth, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (!comment.author.equals(req.userId) && req.userRole !== 'admin' && req.userRole !== 'moderator') {
+      return res.status(403).json({ message: 'Not authorized to delete this comment' });
+    }
+
+    if (comment.status === 'PUBLISHED' || comment.moderationStatus === 'approved') {
+      await Post.findByIdAndUpdate(req.params.id, {
+        $inc: { commentCount: -1 }
+      });
+    }
+
+    await comment.deleteOne();
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Report comment
+router.post('/:id/comments/:commentId/report', auth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const comment = await Comment.findById(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const existingReport = comment.reports.find(report => report.user.equals(req.userId));
+    if (existingReport) {
+      return res.status(400).json({ message: 'You have already reported this comment' });
+    }
+
+    comment.reports.push({
+      user: req.userId,
+      reason
+    });
+
+    if (comment.reports.length >= 3 && comment.status === 'PUBLISHED') {
+      comment.status = 'PENDING_REVIEW';
+      comment.moderationStatus = 'flagged';
+    }
+
+    await comment.save();
+    res.json({ message: 'Comment reported successfully' });
+  } catch (error) {
+    console.error('Report comment error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
